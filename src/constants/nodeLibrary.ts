@@ -1,4 +1,4 @@
-import type { NodeLibraryItem, NodeCategory } from '../types';
+import type { NodeCategory, NodeLibraryItem } from '../types';
 
 export const NODE_CATEGORIES: { id: NodeCategory; label: string; icon: string }[] = [
   { id: 'trigger', label: 'Triggers', icon: '⚡' },
@@ -82,6 +82,12 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🖼️',
       isConfigured: false,
       hasError: false,
+      mediaType: 'image',
+      url: '',
+      caption: '',
+      altText: '',
+      autoplay: false,
+      loop: false,
     },
   },
   {
@@ -98,6 +104,14 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🃏',
       isConfigured: false,
       hasError: false,
+      title: 'Card title',
+      subtitle: 'Optional subtitle',
+      body: 'Short description of this card.',
+      imageUrl: '',
+      layout: 'vertical',
+      buttons: [
+        { id: 'card_btn_1', label: 'Learn more', value: 'learn_more', type: 'url' },
+      ],
     },
   },
   {
@@ -114,6 +128,26 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🎠',
       isConfigured: false,
       hasError: false,
+      cards: [
+        {
+          id: 'carousel_1',
+          title: 'Card 1',
+          subtitle: 'Subtitle',
+          body: 'First card in the carousel.',
+          imageUrl: '',
+          buttons: [],
+        },
+        {
+          id: 'carousel_2',
+          title: 'Card 2',
+          subtitle: 'Subtitle',
+          body: 'Second card in the carousel.',
+          imageUrl: '',
+          buttons: [],
+        },
+      ],
+      autoplay: false,
+      loop: false,
     },
   },
   {
@@ -130,6 +164,27 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '📋',
       isConfigured: false,
       hasError: false,
+      title: 'Customer Details',
+      description: 'Collect key information from the user.',
+      fields: [
+        {
+          id: 'field_name',
+          label: 'Full Name',
+          name: 'full_name',
+          type: 'text',
+          required: true,
+          placeholder: 'John Doe',
+        },
+        {
+          id: 'field_email',
+          label: 'Email',
+          name: 'email',
+          type: 'email',
+          required: true,
+          placeholder: 'you@example.com',
+        },
+      ],
+      submitLabel: 'Submit',
     },
   },
   {
@@ -186,6 +241,12 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🔃',
       isConfigured: false,
       hasError: false,
+      variable: 'status',
+      cases: [
+        { id: 'case_open', value: 'open', label: 'Open' },
+        { id: 'case_closed', value: 'closed', label: 'Closed' },
+      ],
+      defaultCaseLabel: 'Default',
     },
   },
   {
@@ -220,6 +281,10 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🎲',
       isConfigured: false,
       hasError: false,
+      branches: [
+        { id: 'branch_a', label: 'Path A', percentage: 50 },
+        { id: 'branch_b', label: 'Path B', percentage: 50 },
+      ],
     },
   },
   {
@@ -236,6 +301,11 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🔁',
       isConfigured: false,
       hasError: false,
+      loopType: 'count',
+      iterations: 3,
+      condition: '',
+      maxIterations: 10,
+      delaySeconds: 0,
     },
   },
 
@@ -334,6 +404,11 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🗃️',
       isConfigured: false,
       hasError: false,
+      action: 'query',
+      resource: '',
+      filter: '',
+      data: '',
+      resultVariable: 'db_result',
     },
   },
   {
@@ -351,9 +426,9 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       isConfigured: false,
       hasError: false,
       channel: 'inApp',
-      title: '',
-      message: '',
-      target: '',
+      title: 'New update',
+      message: 'Your request has been processed.',
+      target: 'user_id',
     },
   },
 
@@ -373,6 +448,8 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       isConfigured: false,
       hasError: false,
       assignmentType: 'roundRobin',
+      agentId: '',
+      skill: '',
     },
   },
   {
@@ -389,6 +466,11 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '✅',
       isConfigured: false,
       hasError: false,
+      approverGroup: 'managers',
+      message: 'Please review and approve this step.',
+      timeoutMinutes: 60,
+      onTimeout: 'escalate',
+      escalationTarget: 'team_lead',
     },
   },
   {
@@ -405,6 +487,11 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🤝',
       isConfigured: false,
       hasError: false,
+      queue: 'support',
+      priority: 'normal',
+      handoffMessage: 'A human agent will join shortly.',
+      fallbackMessage: 'No agents available. Please try again later.',
+      includeTranscript: true,
     },
   },
 

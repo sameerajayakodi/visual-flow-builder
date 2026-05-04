@@ -119,6 +119,43 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
     typeof loopCount === "number" ? `${loopCount} cycles` : "Until stop";
   const loopScopeLabel =
     typeof loopScope === "string" && loopScope.length ? loopScope : "Flow";
+  const mediaType = data.nodeType === "media" ? (data as any).mediaType : "";
+  const mediaUrl = data.nodeType === "media" ? (data as any).url : "";
+  const mediaName = mediaUrl ? String(mediaUrl).split("/").pop() : "No file";
+  const cardButtons =
+    data.nodeType === "card" ? ((data as any).buttons || []).length : 0;
+  const carouselCount =
+    data.nodeType === "carousel" ? ((data as any).cards || []).length : 0;
+  const formFields =
+    data.nodeType === "form" ? ((data as any).fields || []).length : 0;
+  const switchVariable =
+    data.nodeType === "switch" ? (data as any).variable : "";
+  const randomBranches =
+    data.nodeType === "randomSplit" ? (data as any).branches || [] : [];
+  const randomTotal = Array.isArray(randomBranches)
+    ? randomBranches.reduce(
+        (sum: number, b: any) => sum + (b.percentage || 0),
+        0,
+      )
+    : 0;
+  const dbAction =
+    data.nodeType === "databaseAction" ? (data as any).action : "";
+  const dbResource =
+    data.nodeType === "databaseAction" ? (data as any).resource : "";
+  const notificationChannel =
+    data.nodeType === "notification" ? (data as any).channel : "";
+  const notificationTitle =
+    data.nodeType === "notification" ? (data as any).title : "";
+  const assignType =
+    data.nodeType === "assignAgent" ? (data as any).assignmentType : "";
+  const approvalGroup =
+    data.nodeType === "approvalRequest" ? (data as any).approverGroup : "";
+  const approvalTimeout =
+    data.nodeType === "approvalRequest" ? (data as any).timeoutMinutes : null;
+  const takeoverQueue =
+    data.nodeType === "humanTakeover" ? (data as any).queue : "";
+  const takeoverPriority =
+    data.nodeType === "humanTakeover" ? (data as any).priority : "";
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -231,6 +268,66 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
           </div>
         )}
 
+        {data.nodeType === "media" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Type</span>
+              <span className="flow-node__stat-value">
+                {mediaType || "media"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">File</span>
+              <span className="flow-node__stat-value">{mediaName}</span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "card" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Title</span>
+              <span className="flow-node__stat-value">
+                {(data as any).title || data.label}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Buttons</span>
+              <span className="flow-node__stat-value">{cardButtons}</span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "carousel" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Cards</span>
+              <span className="flow-node__stat-value">{carouselCount}</span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Auto</span>
+              <span className="flow-node__stat-value">
+                {(data as any).autoplay ? "On" : "Off"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "form" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Fields</span>
+              <span className="flow-node__stat-value">{formFields}</span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Submit</span>
+              <span className="flow-node__stat-value">
+                {(data as any).submitLabel || "Submit"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {data.nodeType === "switch" && (
           <div className="flow-node__preview flow-node__preview--switch">
             <div className="flow-node__stat">
@@ -240,10 +337,27 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
               </span>
             </div>
             <div className="flow-node__stat">
-              <span className="flow-node__stat-label">Default</span>
-              <span className="flow-node__stat-value">
-                {switchHasDefault ? "Yes" : "No"}
+              <span className="flow-node__stat-label">
+                {switchVariable ? "Variable" : "Default"}
               </span>
+              <span className="flow-node__stat-value">
+                {switchVariable || (switchHasDefault ? "Yes" : "No")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "randomSplit" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Branches</span>
+              <span className="flow-node__stat-value">
+                {Array.isArray(randomBranches) ? randomBranches.length : 0}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Total</span>
+              <span className="flow-node__stat-value">{randomTotal}%</span>
             </div>
           </div>
         )}
@@ -257,6 +371,89 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
             <div className="flow-node__stat">
               <span className="flow-node__stat-label">Scope</span>
               <span className="flow-node__stat-value">{loopScopeLabel}</span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "databaseAction" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Action</span>
+              <span className="flow-node__stat-value">
+                {dbAction || "query"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Resource</span>
+              <span className="flow-node__stat-value">{dbResource || "-"}</span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "notification" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Channel</span>
+              <span className="flow-node__stat-value">
+                {notificationChannel || "inApp"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Title</span>
+              <span className="flow-node__stat-value">
+                {notificationTitle || data.label}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "assignAgent" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Mode</span>
+              <span className="flow-node__stat-value">
+                {assignType || "roundRobin"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Target</span>
+              <span className="flow-node__stat-value">
+                {(data as any).agentId || (data as any).skill || "Auto"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "approvalRequest" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Approvers</span>
+              <span className="flow-node__stat-value">
+                {approvalGroup || "Group"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Timeout</span>
+              <span className="flow-node__stat-value">
+                {approvalTimeout ? `${approvalTimeout}m` : "None"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "humanTakeover" && (
+          <div className="flow-node__preview flow-node__preview--stats">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Queue</span>
+              <span className="flow-node__stat-value">
+                {takeoverQueue || "-"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Priority</span>
+              <span className="flow-node__stat-value">
+                {takeoverPriority || "normal"}
+              </span>
             </div>
           </div>
         )}

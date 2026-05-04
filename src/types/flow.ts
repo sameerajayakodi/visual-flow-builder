@@ -1,4 +1,4 @@
-import type { Node, Edge, XYPosition } from 'reactflow';
+import type { Edge, Node } from 'reactflow';
 
 // ─── Node Category Types ───
 export type NodeCategory =
@@ -79,6 +79,66 @@ export interface ButtonNodeData extends BaseNodeData {
   }>;
 }
 
+export interface MediaNodeData extends BaseNodeData {
+  nodeType: 'media';
+  mediaType: 'image' | 'video' | 'audio' | 'file';
+  url: string;
+  caption?: string;
+  altText?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+}
+
+export interface CardNodeData extends BaseNodeData {
+  nodeType: 'card';
+  title: string;
+  subtitle?: string;
+  body?: string;
+  imageUrl?: string;
+  layout?: 'vertical' | 'horizontal';
+  buttons: Array<{
+    id: string;
+    label: string;
+    value: string;
+    type: 'reply' | 'url' | 'action';
+  }>;
+}
+
+export interface CarouselNodeData extends BaseNodeData {
+  nodeType: 'carousel';
+  cards: Array<{
+    id: string;
+    title: string;
+    subtitle?: string;
+    body?: string;
+    imageUrl?: string;
+    buttons?: Array<{
+      id: string;
+      label: string;
+      value: string;
+      type: 'reply' | 'url' | 'action';
+    }>;
+  }>;
+  autoplay?: boolean;
+  loop?: boolean;
+}
+
+export interface FormNodeData extends BaseNodeData {
+  nodeType: 'form';
+  title: string;
+  description?: string;
+  fields: Array<{
+    id: string;
+    label: string;
+    name: string;
+    type: 'text' | 'email' | 'number' | 'phone' | 'date' | 'select' | 'textarea';
+    required: boolean;
+    placeholder?: string;
+    options?: string[];
+  }>;
+  submitLabel?: string;
+}
+
 export interface ConditionNodeData extends BaseNodeData {
   nodeType: 'condition';
   rules: Array<{
@@ -88,6 +148,17 @@ export interface ConditionNodeData extends BaseNodeData {
     value: string;
   }>;
   combinator: 'and' | 'or';
+}
+
+export interface SwitchNodeData extends BaseNodeData {
+  nodeType: 'switch';
+  variable: string;
+  cases: Array<{
+    id: string;
+    value: string;
+    label: string;
+  }>;
+  defaultCaseLabel?: string;
 }
 
 export interface InputNodeData extends BaseNodeData {
@@ -110,6 +181,24 @@ export interface DelayNodeData extends BaseNodeData {
   unit: 'seconds' | 'minutes' | 'hours' | 'days';
 }
 
+export interface RandomSplitNodeData extends BaseNodeData {
+  nodeType: 'randomSplit';
+  branches: Array<{
+    id: string;
+    label: string;
+    percentage: number;
+  }>;
+}
+
+export interface LoopNodeData extends BaseNodeData {
+  nodeType: 'loop';
+  loopType: 'count' | 'until';
+  iterations?: number;
+  condition?: string;
+  maxIterations?: number;
+  delaySeconds?: number;
+}
+
 export interface EndNodeData extends BaseNodeData {
   nodeType: 'end';
   endType: 'complete' | 'redirect' | 'restart';
@@ -122,6 +211,15 @@ export interface HttpRequestNodeData extends BaseNodeData {
   headers: Record<string, string>;
   body: string;
   responseVariable: string;
+}
+
+export interface DatabaseActionNodeData extends BaseNodeData {
+  nodeType: 'databaseAction';
+  action: 'insert' | 'update' | 'delete' | 'query';
+  resource: string;
+  filter?: string;
+  data?: string;
+  resultVariable?: string;
 }
 
 export interface SaveVariableNodeData extends BaseNodeData {
@@ -162,6 +260,24 @@ export interface AssignAgentNodeData extends BaseNodeData {
   skill?: string;
 }
 
+export interface ApprovalRequestNodeData extends BaseNodeData {
+  nodeType: 'approvalRequest';
+  approverGroup: string;
+  message: string;
+  timeoutMinutes?: number;
+  onTimeout: 'autoApprove' | 'autoReject' | 'escalate';
+  escalationTarget?: string;
+}
+
+export interface HumanTakeoverNodeData extends BaseNodeData {
+  nodeType: 'humanTakeover';
+  queue: string;
+  priority: 'low' | 'normal' | 'high';
+  handoffMessage: string;
+  fallbackMessage?: string;
+  includeTranscript: boolean;
+}
+
 export interface NotesNodeData extends BaseNodeData {
   nodeType: 'notes';
   content: string;
@@ -172,16 +288,26 @@ export type FlowNodeData =
   | TriggerNodeData
   | TextNodeData
   | ButtonNodeData
+  | MediaNodeData
+  | CardNodeData
+  | CarouselNodeData
+  | FormNodeData
   | ConditionNodeData
+  | SwitchNodeData
   | InputNodeData
   | DelayNodeData
+  | RandomSplitNodeData
+  | LoopNodeData
   | EndNodeData
   | HttpRequestNodeData
+  | DatabaseActionNodeData
   | SaveVariableNodeData
   | SendEmailNodeData
   | AiPromptNodeData
   | NotificationNodeData
   | AssignAgentNodeData
+  | ApprovalRequestNodeData
+  | HumanTakeoverNodeData
   | NotesNodeData
   | BaseNodeData;
 
