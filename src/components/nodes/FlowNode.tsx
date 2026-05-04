@@ -1,8 +1,17 @@
-import React, { memo, useCallback } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import type { FlowNodeData } from '../../types';
-import { getNodeColor } from '../../constants';
-import { useFlowStore } from '../../store';
+import React, { memo, useCallback } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { getNodeColor } from "../../constants";
+import { useFlowStore } from "../../store";
+import type { FlowNodeData, NotesNodeData } from "../../types";
+
+const CATEGORY_LABELS: Record<FlowNodeData["category"], string> = {
+  trigger: "Trigger",
+  message: "Message",
+  logic: "Logic",
+  action: "Action",
+  interaction: "Human",
+  utility: "Utility",
+};
 
 const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
   id,
@@ -14,28 +23,49 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
   const duplicateNode = useFlowStore((s) => s.duplicateNode);
 
   const color = getNodeColor(data.nodeType);
-  const isEnd = data.nodeType === 'end';
-  const isTrigger = data.nodeType === 'trigger';
-  const isNotes = data.nodeType === 'notes';
-  const isCondition = data.nodeType === 'condition';
+  const isEnd = data.nodeType === "end";
+  const isTrigger = data.nodeType === "trigger";
+  const isNotes = data.nodeType === "notes";
+  const isCondition = data.nodeType === "condition";
+  const showConfigStatus = !isNotes && !isTrigger && !isEnd;
+  const statusTone = data.hasError
+    ? "error"
+    : showConfigStatus && !data.isConfigured
+      ? "warn"
+      : "ready";
+  const statusLabel = data.hasError
+    ? "Error"
+    : showConfigStatus && !data.isConfigured
+      ? "Needs setup"
+      : "Ready";
+  const statusTitle = data.hasError
+    ? (data.errorMessage ?? "This node has an error.")
+    : showConfigStatus && !data.isConfigured
+      ? "This node needs configuration."
+      : "This node is configured.";
+  const categoryLabel = CATEGORY_LABELS[data.category] ?? data.category;
+  const notesColor = isNotes ? (data as NotesNodeData).color : undefined;
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       selectNode(id);
     },
-    [id, selectNode]
+    [id, selectNode],
   );
 
   return (
     <div
       onClick={handleClick}
-      className={`flow-node ${selected ? 'flow-node--selected' : ''} ${data.hasError ? 'flow-node--error' : ''}`}
-      style={{
-        '--node-color': color,
-        '--node-color-light': color + '18',
-        '--node-color-medium': color + '40',
-      } as React.CSSProperties}
+      className={`flow-node ${selected ? "flow-node--selected" : ""} ${data.hasError ? "flow-node--error" : ""} ${isNotes ? "flow-node--notes" : ""}`}
+      style={
+        {
+          "--node-color": color,
+          "--node-color-light": color + "18",
+          "--node-color-medium": color + "40",
+          "--node-surface": notesColor ?? "var(--bg-card)",
+        } as React.CSSProperties
+      }
     >
       {/* Incoming handle */}
       {!isTrigger && (
@@ -47,34 +77,42 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
         />
       )}
 
-      {/* Node header bar */}
-      <div className="flow-node__color-bar" style={{ background: color }} />
-
       {/* Node content */}
       <div className="flow-node__body">
         <div className="flow-node__header">
-          <span className="flow-node__icon">{data.icon}</span>
+          <span className="flow-node__icon-wrap">
+            <span className="flow-node__icon">{data.icon}</span>
+          </span>
           <div className="flow-node__info">
-            <span className="flow-node__label">{data.label}</span>
-            {data.description && (
-              <span className="flow-node__description">{data.description}</span>
-            )}
+            <div className="flow-node__title-row">
+              <span className="flow-node__label">{data.label}</span>
+              <span
+                className={`flow-node__status flow-node__status--${statusTone}`}
+                title={statusTitle}
+              >
+                {statusLabel}
+              </span>
+            </div>
+            <div className="flow-node__meta">
+              <span className="flow-node__category">{categoryLabel}</span>
+              {data.description && (
+                <span className="flow-node__description">
+                  {data.description}
+                </span>
+              )}
+            </div>
           </div>
-          {data.hasError && <span className="flow-node__error-badge">!</span>}
-          {!data.isConfigured && !isNotes && !isTrigger && !isEnd && (
-            <span className="flow-node__unconfigured-badge" title="Needs configuration">●</span>
-          )}
         </div>
 
         {/* Quick preview of node content */}
-        {data.nodeType === 'text' && (data as any).message && (
+        {data.nodeType === "text" && (data as any).message && (
           <div className="flow-node__preview">
             {((data as any).message as string).slice(0, 60)}
-            {((data as any).message as string).length > 60 ? '...' : ''}
+            {((data as any).message as string).length > 60 ? "..." : ""}
           </div>
         )}
 
-        {data.nodeType === 'button' && (data as any).buttons && (
+        {data.nodeType === "button" && (data as any).buttons && (
           <div className="flow-node__preview">
             {((data as any).buttons as any[]).map((b: any, i: number) => (
               <span key={i} className="flow-node__button-pill">
@@ -84,16 +122,20 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
           </div>
         )}
 
-        {data.nodeType === 'delay' && (
+        {data.nodeType === "delay" && (
           <div className="flow-node__preview">
             Wait {(data as any).duration} {(data as any).unit}
           </div>
         )}
 
-        {data.nodeType === 'condition' && (
+        {data.nodeType === "condition" && (
           <div className="flow-node__preview flow-node__preview--condition">
-            <span className="flow-node__branch flow-node__branch--yes">✓ Yes</span>
-            <span className="flow-node__branch flow-node__branch--no">✗ No</span>
+            <span className="flow-node__branch flow-node__branch--yes">
+              ✓ Yes
+            </span>
+            <span className="flow-node__branch flow-node__branch--no">
+              ✗ No
+            </span>
           </div>
         )}
       </div>
@@ -142,14 +184,14 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
             position={Position.Bottom}
             className="flow-handle flow-handle--source flow-handle--yes"
             id="yes"
-            style={{ left: '30%' }}
+            style={{ left: "30%" }}
           />
           <Handle
             type="source"
             position={Position.Bottom}
             className="flow-handle flow-handle--source flow-handle--no"
             id="no"
-            style={{ left: '70%' }}
+            style={{ left: "70%" }}
           />
         </>
       )}
