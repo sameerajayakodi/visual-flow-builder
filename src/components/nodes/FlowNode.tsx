@@ -13,6 +13,27 @@ const CATEGORY_LABELS: Record<FlowNodeData["category"], string> = {
   utility: "Utility",
 };
 
+const COMPACT_NODE_TYPES = new Set<FlowNodeData["nodeType"]>([
+  "trigger",
+  "end",
+  "delay",
+  "notes",
+]);
+
+const WIDE_NODE_TYPES = new Set<FlowNodeData["nodeType"]>([
+  "text",
+  "button",
+  "media",
+  "card",
+  "carousel",
+  "form",
+  "inputRequest",
+  "httpRequest",
+  "sendEmail",
+  "aiPrompt",
+  "notification",
+]);
+
 const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
   id,
   data,
@@ -45,6 +66,59 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
       : "This node is configured.";
   const categoryLabel = CATEGORY_LABELS[data.category] ?? data.category;
   const notesColor = isNotes ? (data as NotesNodeData).color : undefined;
+  const sizeClass = COMPACT_NODE_TYPES.has(data.nodeType)
+    ? "flow-node--compact"
+    : WIDE_NODE_TYPES.has(data.nodeType)
+      ? "flow-node--wide"
+      : "";
+  const typeClass = isCondition
+    ? "flow-node--condition"
+    : data.nodeType === "switch"
+      ? "flow-node--switch"
+      : data.nodeType === "delay"
+        ? "flow-node--delay"
+        : data.nodeType === "loop"
+          ? "flow-node--loop"
+          : "";
+  const conditionRules = isCondition ? ((data as any).rules ?? []) : [];
+  const conditionCombinator = isCondition
+    ? String((data as any).combinator ?? "and")
+    : "and";
+  const conditionSummary = conditionRules.length
+    ? `${conditionRules.length} rule${conditionRules.length === 1 ? "" : "s"}`
+    : "No rules";
+  const switchCases =
+    data.nodeType === "switch"
+      ? ((data as any).cases ??
+        (data as any).paths ??
+        (data as any).options ??
+        [])
+      : [];
+  const switchCount = Array.isArray(switchCases) ? switchCases.length : 0;
+  const switchHasDefault = Boolean(
+    (data as any).hasDefault ??
+    (data as any).defaultPath ??
+    (data as any).defaultCase,
+  );
+  const delayDuration =
+    data.nodeType === "delay" ? (data as any).duration : null;
+  const delayUnit = data.nodeType === "delay" ? (data as any).unit : null;
+  const delayText =
+    delayDuration != null && delayUnit
+      ? `${delayDuration} ${delayUnit}`
+      : "Set duration";
+  const loopCount =
+    data.nodeType === "loop"
+      ? ((data as any).iterations ?? (data as any).maxIterations)
+      : null;
+  const loopScope =
+    data.nodeType === "loop"
+      ? ((data as any).scope ?? (data as any).mode)
+      : null;
+  const loopLabel =
+    typeof loopCount === "number" ? `${loopCount} cycles` : "Until stop";
+  const loopScopeLabel =
+    typeof loopScope === "string" && loopScope.length ? loopScope : "Flow";
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -57,7 +131,7 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
   return (
     <div
       onClick={handleClick}
-      className={`flow-node ${selected ? "flow-node--selected" : ""} ${data.hasError ? "flow-node--error" : ""} ${isNotes ? "flow-node--notes" : ""}`}
+      className={`flow-node ${sizeClass} ${typeClass} ${selected ? "flow-node--selected" : ""} ${data.hasError ? "flow-node--error" : ""} ${isNotes ? "flow-node--notes" : ""}`}
       style={
         {
           "--node-color": color,
@@ -123,19 +197,67 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
         )}
 
         {data.nodeType === "delay" && (
-          <div className="flow-node__preview">
-            Wait {(data as any).duration} {(data as any).unit}
+          <div className="flow-node__preview flow-node__preview--delay">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Wait</span>
+              <span className="flow-node__stat-value">{delayText}</span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Type</span>
+              <span className="flow-node__stat-value">Timer</span>
+            </div>
           </div>
         )}
 
         {data.nodeType === "condition" && (
           <div className="flow-node__preview flow-node__preview--condition">
-            <span className="flow-node__branch flow-node__branch--yes">
-              ✓ Yes
-            </span>
-            <span className="flow-node__branch flow-node__branch--no">
-              ✗ No
-            </span>
+            <div className="flow-node__condition-row">
+              <span className="flow-node__condition-label">IF</span>
+              <span className="flow-node__condition-text">
+                {conditionSummary}
+              </span>
+              <span className="flow-node__condition-chip">
+                {conditionCombinator.toUpperCase()}
+              </span>
+            </div>
+            <div className="flow-node__condition-branches">
+              <span className="flow-node__branch flow-node__branch--yes">
+                ✓ Yes path
+              </span>
+              <span className="flow-node__branch flow-node__branch--no">
+                ✗ No path
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "switch" && (
+          <div className="flow-node__preview flow-node__preview--switch">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Cases</span>
+              <span className="flow-node__stat-value">
+                {switchCount > 0 ? switchCount : "None"}
+              </span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Default</span>
+              <span className="flow-node__stat-value">
+                {switchHasDefault ? "Yes" : "No"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {data.nodeType === "loop" && (
+          <div className="flow-node__preview flow-node__preview--loop">
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Repeat</span>
+              <span className="flow-node__stat-value">{loopLabel}</span>
+            </div>
+            <div className="flow-node__stat">
+              <span className="flow-node__stat-label">Scope</span>
+              <span className="flow-node__stat-value">{loopScopeLabel}</span>
+            </div>
           </div>
         )}
       </div>
@@ -150,8 +272,19 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
               duplicateNode(id);
             }}
             title="Duplicate"
+            aria-label="Duplicate"
           >
-            ⧉
+            <svg
+              className="flow-node__action-icon"
+              viewBox="0 0 24 24"
+              role="img"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M8 7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2v-2h2V7h-7v2H8V7zm-3 3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7zm2 0v7h7v-7H7z"
+              />
+            </svg>
           </button>
           <button
             className="flow-node__action-btn flow-node__action-btn--delete"
@@ -160,8 +293,19 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({
               deleteNode(id);
             }}
             title="Delete"
+            aria-label="Delete"
           >
-            ✕
+            <svg
+              className="flow-node__action-icon"
+              viewBox="0 0 24 24"
+              role="img"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z"
+              />
+            </svg>
           </button>
         </div>
       )}
