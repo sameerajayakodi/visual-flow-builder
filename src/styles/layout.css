@@ -1,0 +1,44 @@
+.flow-builder { display: flex; flex-direction: column; height: 100vh; background: var(--bg-primary); }
+.flow-builder__main { display: flex; flex: 1; overflow: hidden; }
+.flow-builder__canvas-area { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; }
+
+/* ─── Topbar ─── */
+.topbar { display: flex; align-items: center; justify-content: space-between; height: var(--topbar-h); padding: 0 16px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); gap: 8px; z-index: 50; }
+.topbar__left, .topbar__center, .topbar__right { display: flex; align-items: center; gap: 8px; }
+.topbar__brand { display: flex; align-items: center; gap: 8px; }
+.topbar__logo { font-size: 22px; color: var(--accent); font-weight: 800; }
+.topbar__brand-name { font-weight: 700; font-size: 15px; color: var(--text-primary); letter-spacing: -0.3px; }
+.topbar__divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+.topbar__name-section { display: flex; align-items: center; gap: 8px; }
+.topbar__name-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid transparent; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+.topbar__name-btn:hover { background: var(--bg-secondary); border-color: var(--border); }
+.topbar__name-btn svg { opacity: 0; transition: opacity 0.15s; }
+.topbar__name-btn:hover svg { opacity: 0.5; }
+.topbar__name-input { font-size: 14px; font-weight: 600; padding: 4px 10px; border: 1.5px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; font-family: inherit; width: 200px; }
+.topbar__save-status { font-size: 11px; color: var(--text-muted); }
+.topbar__save-status--unsaved { color: var(--warning); }
+.topbar__save-status--saved { color: var(--text-muted); }
+
+.topbar__icon-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: none; background: none; border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; font-size: 13px; font-family: inherit; }
+.topbar__icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.topbar__icon-btn--active { background: var(--accent-light); color: var(--accent); }
+.topbar__icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.topbar__btn-group { display: flex; gap: 2px; background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 2px; }
+
+.topbar__btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; font-family: inherit; white-space: nowrap; }
+.topbar__btn--primary { background: var(--accent); color: white; }
+.topbar__btn--primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.topbar__btn--secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
+.topbar__btn--secondary:hover { background: var(--bg-primary); }
+.topbar__btn--outline { background: none; color: var(--text-secondary); border: 1px solid var(--border); }
+.topbar__btn--outline:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.topbar__badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 700; }
+.topbar__badge--error { background: var(--danger); color: white; }
+
+.topbar__menu-wrap { position: relative; }
+.topbar__menu-overlay { position: fixed; inset: 0; z-index: 90; }
+.topbar__menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; z-index: 100; padding: 4px; overflow: hidden; }
+.topbar__menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: none; background: none; font-size: 13px; color: var(--text-primary); cursor: pointer; border-radius: var(--radius-sm); font-family: inherit; transition: background 0.15s; }
+.topbar__menu-item:hover { background: var(--bg-secondary); }
+.topbar__menu-item--danger { color: var(--danger); }
+.topbar__menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
