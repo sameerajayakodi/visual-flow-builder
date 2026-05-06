@@ -1,26 +1,26 @@
-import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
 import {
-  addEdge as rfAddEdge,
-  applyNodeChanges,
-  applyEdgeChanges,
-  type Connection,
-  type NodeChange,
-  type EdgeChange,
-  MarkerType,
+    applyEdgeChanges,
+    applyNodeChanges,
+    type Connection,
+    type EdgeChange,
+    MarkerType,
+    type NodeChange,
+    addEdge as rfAddEdge,
 } from 'reactflow';
 import { v4 as uuidv4 } from 'uuid';
-import type {
-  FlowNode,
-  FlowEdge,
-  FlowNodeData,
-  FlowDocument,
-  FlowVariable,
-  ValidationError,
-  HistoryEntry,
-  FlowNodeType,
-} from '../types';
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
 import { NODE_LIBRARY } from '../constants';
+import type {
+    FlowDocument,
+    FlowEdge,
+    FlowNode,
+    FlowNodeData,
+    FlowNodeType,
+    FlowVariable,
+    HistoryEntry,
+    ValidationError,
+} from '../types';
 
 // ─── History size limit ───
 const MAX_HISTORY = 50;
@@ -67,6 +67,7 @@ interface FlowState {
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
   deleteEdge: (edgeId: string) => void;
+  updateEdge: (edgeId: string, patch: Partial<FlowEdge>) => void;
   selectEdge: (edgeId: string | null) => void;
 
   // ─── Actions: Flow ───
@@ -296,6 +297,35 @@ export const useFlowStore = create<FlowState>()(
         edges: state.edges.filter((e) => e.id !== edgeId),
         selectedEdgeId:
           state.selectedEdgeId === edgeId ? null : state.selectedEdgeId,
+        isDirty: true,
+      });
+    },
+
+    updateEdge: (edgeId, patch) => {
+      const state = get();
+      const edge = state.edges.find((e) => e.id === edgeId);
+      if (!edge) return;
+
+      const nextSource = patch.source ?? edge.source;
+      const nextTarget = patch.target ?? edge.target;
+      if (nextSource === nextTarget) return;
+
+      const duplicate = state.edges.some(
+        (e) =>
+          e.id !== edgeId &&
+          e.source === nextSource &&
+          e.target === nextTarget &&
+          e.sourceHandle === (patch.sourceHandle ?? edge.sourceHandle) &&
+          e.targetHandle === (patch.targetHandle ?? edge.targetHandle)
+      );
+      if (duplicate) return;
+
+      state.pushHistory();
+
+      set({
+        edges: state.edges.map((e) =>
+          e.id === edgeId ? { ...e, ...patch } : e
+        ),
         isDirty: true,
       });
     },
