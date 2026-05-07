@@ -385,3 +385,138 @@
   color: var(--danger);
   border-color: #fecaca;
 }
+
+/* ─── Config Sections (collapsible) ─── */
+.config-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.config-section__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: background 0.15s;
+}
+.config-section__header:hover {
+  background: var(--border);
+}
+.config-section__icon {
+  font-size: 14px;
+}
+.config-section__title {
+  flex: 1;
+  text-align: left;
+}
+.config-section__badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.config-section__arrow {
+  transition: transform 0.2s;
+  color: var(--text-muted);
+}
+.config-section__arrow--open {
+  transform: rotate(180deg);
+}
+.config-section__body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  animation: sectionExpand 0.2s ease;
+}
+@keyframes sectionExpand {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Option Cards (visual selector) ─── */
+.config-field__select-wrap {
+  width: 100%;
+}
+.config-field__option-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.config-field__option-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--text-secondary);
+}
+.config-field__option-card:hover {
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+.config-field__option-card--active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+.config-field__option-icon {
+  font-size: 18px;
+}
+.config-field__option-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ─── Required indicator ─── */
+.config-field__required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+/* ─── Slider value display ─── */
+.config-field__slider-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.config-field__range-value {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ─── Config Renderer wrapper ─── */
+.config-renderer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.config-renderer__tips {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

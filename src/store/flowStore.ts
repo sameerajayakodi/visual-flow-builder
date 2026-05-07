@@ -11,6 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NODE_LIBRARY } from '../constants';
+import { isNodeConfigured } from '../config';
+import { flowToPrompts, promptsToFlow } from '../utils/flowAdapter';
 import type {
     FlowDocument,
     FlowEdge,
@@ -153,19 +155,22 @@ export const useFlowStore = create<FlowState>()(
       if (!libraryItem) return '';
 
       const nodeId = `${type}_${uuidv4().slice(0, 8)}`;
-      const newNode: FlowNode = {
-        id: nodeId,
-        type: type,
-        position,
-        data: {
+      const nodeData = {
           ...libraryItem.defaultData,
           label: libraryItem.label,
           nodeType: type,
           category: libraryItem.category,
           icon: libraryItem.icon,
-          isConfigured: false,
           hasError: false,
-        } as FlowNodeData,
+        } as FlowNodeData;
+      // Auto-check configuration using schema
+      (nodeData as any).isConfigured = isNodeConfigured(type, nodeData as any);
+
+      const newNode: FlowNode = {
+        id: nodeId,
+        type: type,
+        position,
+        data: nodeData,
       };
 
       set({
@@ -183,11 +188,13 @@ export const useFlowStore = create<FlowState>()(
       state.pushHistory();
 
       set({
-        nodes: state.nodes.map((n) =>
-          n.id === nodeId
-            ? { ...n, data: { ...n.data, ...data } as FlowNodeData }
-            : n
-        ),
+        nodes: state.nodes.map((n) => {
+          if (n.id !== nodeId) return n;
+          const merged = { ...n.data, ...data } as FlowNodeData;
+          // Auto-recheck configuration status using schema
+          (merged as any).isConfigured = isNodeConfigured(merged.nodeType, merged as any);
+          return { ...n, data: merged };
+        }),
         isDirty: true,
       });
     },
@@ -350,13 +357,28 @@ export const useFlowStore = create<FlowState>()(
     },
 
     loadFlow: (doc) => {
+      // Support both the old format (for standard example templates) and the new format
+      const isNewFormat = doc.prompts !== undefined;
+      
+      let finalNodes = [];
+      let finalEdges = [];
+      
+      if (isNewFormat) {
+        const result = promptsToFlow(doc.prompts);
+        finalNodes = result.nodes;
+        finalEdges = result.edges;
+      } else {
+        finalNodes = (doc as any).nodes || [];
+        finalEdges = (doc as any).edges || [];
+      }
+
       set({
         flowId: doc.flowId,
         flowName: doc.name,
-        flowStatus: doc.status,
+        flowStatus: (doc.status as any) || 'draft',
         flowVersion: doc.version,
-        nodes: doc.nodes,
-        edges: doc.edges,
+        nodes: finalNodes,
+        edges: finalEdges,
         variables: doc.variables,
         isDirty: false,
         selectedNodeId: null,
@@ -372,9 +394,7 @@ export const useFlowStore = create<FlowState>()(
         name: state.flowName,
         version: state.flowVersion,
         status: state.flowStatus,
-        trigger: { type: 'manual' },
-        nodes: state.nodes,
-        edges: state.edges,
+        prompts: flowToPrompts(state.nodes, state.edges),
         variables: state.variables,
         metadata: {
           createdAt: new Date().toISOString(),

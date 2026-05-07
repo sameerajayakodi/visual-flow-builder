@@ -34,7 +34,8 @@ export type FlowNodeType =
   | 'approvalRequest'
   | 'humanTakeover'
   | 'notes'
-  | 'end';
+  | 'end'
+  | 'questionnaire';
 
 // ─── Node Data Interfaces ───
 export interface BaseNodeData {
@@ -284,6 +285,23 @@ export interface NotesNodeData extends BaseNodeData {
   color: string;
 }
 
+export interface QuestionnaireNodeData extends BaseNodeData {
+  nodeType: 'questionnaire';
+  pIndex: number;
+  promptKey: string;
+  language: string;
+  text: string;
+  promptProps: string[];
+  answers: Array<{
+    id: string;
+    aIndex: number;
+    keyPattern: string;
+    keyPatternHuman: string;
+    text: string;
+    props: string[];
+  }>;
+}
+
 export type FlowNodeData =
   | TriggerNodeData
   | TextNodeData
@@ -309,6 +327,7 @@ export type FlowNodeData =
   | ApprovalRequestNodeData
   | HumanTakeoverNodeData
   | NotesNodeData
+  | QuestionnaireNodeData
   | BaseNodeData;
 
 export type FlowNode = Node<FlowNodeData>;
@@ -316,23 +335,36 @@ export type FlowEdge = Edge;
 
 // ─── Flow Document ───
 export interface FlowDocument {
-  flowId: string;
-  name: string;
-  version: number;
-  status: 'draft' | 'published' | 'archived';
-  trigger: {
-    type: string;
-  };
-  nodes: FlowNode[];
-  edges: FlowEdge[];
-  variables: Record<string, FlowVariable>;
-  metadata: {
-    createdAt: string;
-    updatedAt: string;
-    createdBy?: string;
-    description?: string;
-    tags?: string[];
-  };
+  flowId?: string;
+  name?: string;
+  version?: number;
+  status?: string;
+  prompts: Array<{
+    pIndex: number;
+    key: string;
+    language: string;
+    text: string;
+    props: string[];
+    answers: Array<{
+      aIndex: number;
+      keyPattern: string;
+      keyPatternHuman: string;
+      text: string;
+      props: string[];
+      nextPromptLanguage?: string;
+      nextPIndex?: number;
+      id?: string; // UI visual metadata
+    }>;
+    // UI visual metadata
+    id?: string;
+    type?: string;
+    position?: { x: number; y: number };
+    width?: number;
+    height?: number;
+    data?: any;
+  }>;
+  variables?: Record<string, FlowVariable>;
+  metadata?: any;
 }
 
 export interface FlowVariable {

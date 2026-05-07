@@ -207,6 +207,31 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       validation: { required: true },
     },
   },
+  {
+    type: 'questionnaire',
+    label: 'Survey Prompt',
+    description: 'JSON Survey Prompt Builder',
+    category: 'message',
+    icon: '📋',
+    color: '#8b5cf6',
+    defaultData: {
+      label: 'Survey Prompt',
+      nodeType: 'questionnaire',
+      category: 'message',
+      icon: '📋',
+      isConfigured: false,
+      hasError: false,
+      pIndex: 0,
+      promptKey: 'select_option',
+      language: 'ENGLISH',
+      text: 'Please select an option',
+      promptProps: ['SINGLE_CHOICE'],
+      answers: [
+        { id: 'ans_1', aIndex: 1, keyPattern: '1', keyPatternHuman: '1', text: 'Option 1', props: ['BUTTON'] }
+      ]
+    },
+  },
+
 
   // ─── Logic Nodes ───
   {
