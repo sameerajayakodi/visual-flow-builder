@@ -217,7 +217,7 @@ const schemas: NodeConfigSchema[] = [
       },
     ],
     tips: [
-      { icon: '💡', text: 'This produces the senior engineer JSON format. Set pIndex=99 and type=ENDING for the final "Thank You" prompt.' },
+      // { icon: '💡', text: 'This produces the senior engineer JSON format. Set pIndex=99 and type=ENDING for the final "Thank You" prompt.' },
     ],
   },
 

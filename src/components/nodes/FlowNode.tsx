@@ -208,10 +208,10 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
           </div>
         </div>
 
-        {/* Question / Message text */}
-        {(qData || (data as any).message) && <QuestionPreview data={data} />}
+        {/* Question / Message text — only for questionnaire or nodes with dynamic outputs */}
+        {(qData || hasDynamic) && <QuestionPreview data={data} />}
 
-        {/* Fallback preview for nodes without dynamic outputs */}
+        {/* Fallback preview for plain nodes (text, delay, httpRequest, etc.) */}
         {!hasDynamic && !qData && <FallbackPreview data={data} />}
       </div>
 
