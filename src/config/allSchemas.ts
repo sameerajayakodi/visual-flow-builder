@@ -44,7 +44,7 @@ const schemas: NodeConfigSchema[] = [
     tips: [{ icon: '💡', text: 'This is the entry point of your flow. Every flow needs exactly one trigger.' }],
   },
 
-  // ─── TEXT ───
+  // ─── TEXT MESSAGE ───
   {
     nodeType: 'text',
     requiredFields: ['message'],
@@ -63,7 +63,7 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── BUTTON ───
+  // ─── BUTTON CHOICE ───
   {
     nodeType: 'button',
     requiredFields: ['message', 'buttons'],
@@ -73,7 +73,7 @@ const schemas: NodeConfigSchema[] = [
         icon: '🔘',
         fields: [
           {
-            key: 'message', label: 'Message', type: 'textarea',
+            key: 'message', label: 'Question / Message', type: 'textarea',
             placeholder: 'Please choose an option:', rows: 2, required: true,
           },
           {
@@ -94,43 +94,7 @@ const schemas: NodeConfigSchema[] = [
         ],
       },
     ],
-  },
-
-  // ─── MEDIA ───
-  {
-    nodeType: 'media',
-    requiredFields: ['url'],
-    sections: [
-      {
-        title: 'Media',
-        icon: '🖼️',
-        fields: [
-          {
-            key: 'mediaType', label: 'Media Type', type: 'select',
-            options: [
-              { label: 'Image', value: 'image', icon: '🖼️' },
-              { label: 'Video', value: 'video', icon: '🎬' },
-              { label: 'Audio', value: 'audio', icon: '🎵' },
-              { label: 'File', value: 'file', icon: '📄' },
-            ],
-          },
-          { key: 'url', label: 'Media URL', type: 'text', placeholder: 'https://...', required: true },
-          { key: 'caption', label: 'Caption', type: 'textarea', placeholder: 'Add a short caption...', rows: 3 },
-          {
-            key: 'altText', label: 'Alt Text', type: 'text', placeholder: 'Describe the image',
-            showWhen: { field: 'mediaType', equals: 'image' },
-          },
-          {
-            key: 'autoplay', label: 'Autoplay', type: 'checkbox',
-            showWhen: { field: 'mediaType', equals: ['video', 'audio'] },
-          },
-          {
-            key: 'loop', label: 'Loop', type: 'checkbox',
-            showWhen: { field: 'mediaType', equals: ['video', 'audio'] },
-          },
-        ],
-      },
-    ],
+    tips: [{ icon: '💡', text: 'Each button creates a separate output. Connect each one to the next step — no condition node needed!' }],
   },
 
   // ─── CARD ───
@@ -144,105 +108,52 @@ const schemas: NodeConfigSchema[] = [
         fields: [
           { key: 'title', label: 'Title', type: 'text', placeholder: 'Card title', required: true },
           { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Optional subtitle' },
+          { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Card content', rows: 3 },
           { key: 'imageUrl', label: 'Image URL', type: 'text', placeholder: 'https://...' },
-          { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Describe the card content...', rows: 3 },
-          {
-            key: 'layout', label: 'Layout', type: 'select',
-            options: [{ label: 'Vertical', value: 'vertical' }, { label: 'Horizontal', value: 'horizontal' }],
-          },
-          {
-            key: 'buttons', label: 'Buttons', type: 'button-list', addLabel: '+ Add Button',
-            itemSchema: [
-              { key: 'label', label: 'Label', type: 'text', placeholder: 'Label' },
-              { key: 'value', label: 'Value', type: 'text', placeholder: 'Value' },
-              {
-                key: 'type', label: 'Type', type: 'select',
-                options: [{ label: 'Reply', value: 'reply' }, { label: 'URL', value: 'url' }, { label: 'Action', value: 'action' }],
-              },
-            ],
-          },
         ],
       },
-    ],
-  },
-
-  // ─── CAROUSEL ───
-  {
-    nodeType: 'carousel',
-    requiredFields: ['cards'],
-    sections: [
       {
-        title: 'Carousel',
-        icon: '🎠',
+        title: 'Card Buttons',
+        icon: '🔘',
         fields: [
           {
-            key: 'cards', label: 'Cards', type: 'card-list', addLabel: '+ Add Card',
+            key: 'buttons', label: 'Buttons', type: 'button-list',
+            addLabel: '+ Add Button', maxItems: 5,
             itemSchema: [
-              { key: 'title', label: 'Title', type: 'text', placeholder: 'Card title' },
-              { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle' },
-              { key: 'imageUrl', label: 'Image URL', type: 'text', placeholder: 'https://...' },
-              { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Card body...', rows: 3 },
-            ],
-          },
-          { key: 'autoplay', label: 'Auto-scroll cards', type: 'checkbox' },
-          { key: 'loop', label: 'Loop carousel', type: 'checkbox' },
-        ],
-      },
-    ],
-  },
-
-  // ─── FORM ───
-  {
-    nodeType: 'form',
-    requiredFields: ['title', 'fields'],
-    sections: [
-      {
-        title: 'Form Setup',
-        icon: '📋',
-        fields: [
-          { key: 'title', label: 'Form Title', type: 'text', placeholder: 'Form title', required: true },
-          { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Explain what you need from the user...', rows: 3 },
-          {
-            key: 'fields', label: 'Fields', type: 'field-list', addLabel: '+ Add Field',
-            itemSchema: [
-              { key: 'label', label: 'Label', type: 'text', placeholder: 'Field label' },
-              { key: 'name', label: 'Name', type: 'text', placeholder: 'field_name' },
+              { key: 'label', label: 'Label', type: 'text', placeholder: 'Button label' },
               {
                 key: 'type', label: 'Type', type: 'select',
                 options: [
-                  { label: 'Text', value: 'text' }, { label: 'Email', value: 'email' },
-                  { label: 'Number', value: 'number' }, { label: 'Phone', value: 'phone' },
-                  { label: 'Date', value: 'date' }, { label: 'Select', value: 'select' },
-                  { label: 'Textarea', value: 'textarea' },
+                  { label: 'Reply', value: 'reply' },
+                  { label: 'URL', value: 'url' },
                 ],
               },
-              { key: 'placeholder', label: 'Placeholder', type: 'text', placeholder: 'Placeholder text' },
-              { key: 'required', label: 'Required', type: 'checkbox' },
             ],
           },
-          { key: 'submitLabel', label: 'Submit Button', type: 'text', placeholder: 'Submit' },
         ],
       },
     ],
   },
 
-  // ─── INPUT REQUEST ───
+  // ─── COLLECT INPUT ───
   {
     nodeType: 'inputRequest',
     requiredFields: ['prompt', 'variableName'],
     sections: [
       {
-        title: 'Collect Input',
+        title: 'Input Settings',
         icon: '📝',
         fields: [
-          { key: 'prompt', label: 'Prompt Message', type: 'textarea', placeholder: 'What would you like to ask?', rows: 3, required: true },
-          { key: 'variableName', label: 'Save Response As', type: 'text', placeholder: 'e.g. user_name, email', required: true },
+          { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Ask the user for input...', rows: 2, required: true },
+          { key: 'variableName', label: 'Save to Variable', type: 'text', placeholder: 'user_name', required: true },
           {
             key: 'inputType', label: 'Input Type', type: 'select',
             options: [
-              { label: 'Text', value: 'text' }, { label: 'Number', value: 'number' },
-              { label: 'Email', value: 'email' }, { label: 'Phone', value: 'phone' },
-              { label: 'Date', value: 'date' }, { label: 'Selection', value: 'select' },
+              { label: 'Text', value: 'text' },
+              { label: 'Number', value: 'number' },
+              { label: 'Email', value: 'email' },
+              { label: 'Phone', value: 'phone' },
+              { label: 'Date', value: 'date' },
             ],
           },
         ],
@@ -250,85 +161,121 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── CONDITION ───
+  // ─── QUESTIONNAIRE / SURVEY PROMPT ───
+  {
+    nodeType: 'questionnaire',
+    requiredFields: ['promptKey', 'text'],
+    sections: [
+      {
+        title: 'Prompt Details',
+        icon: '📋',
+        fields: [
+          { key: 'pIndex', label: 'Prompt Index (pIndex)', type: 'number', required: true, hint: 'Unique numeric ID. Use 99 for ending prompts.' },
+          { key: 'promptKey', label: 'Key', type: 'text', placeholder: 'select_language', required: true },
+          {
+            key: 'language', label: 'Language', type: 'select',
+            options: [
+              { label: 'ENGLISH', value: 'ENGLISH' },
+              { label: 'TAMIL', value: 'TAMIL' },
+              { label: 'SINHALA', value: 'SINHALA' },
+              { label: 'HINDI', value: 'HINDI' },
+            ],
+          },
+          { key: 'text', label: 'Question Text', type: 'textarea', placeholder: 'Ask your question here...', rows: 3, required: true },
+          {
+            key: 'promptProps', label: 'Prompt Type', type: 'select',
+            options: [
+              { label: 'Text Input', value: 'TEXT', description: 'Free text response' },
+              { label: 'Single Choice', value: 'SINGLE_CHOICE', description: 'Pick one answer' },
+              { label: 'Multi Choice', value: 'MULTI_CHOICE', description: 'Pick multiple answers' },
+              { label: 'Skippable', value: 'SKIPPABLE', description: 'User can skip' },
+              { label: 'Ending', value: 'ENDING', description: 'Final prompt (no outputs)' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Answers',
+        icon: '🔘',
+        fields: [
+          {
+            key: 'answers', label: 'Answer Options', type: 'answer-list', addLabel: '+ Add Answer',
+            hint: 'Each answer becomes an output handle you can connect to the next prompt.',
+            itemSchema: [
+              { key: 'text', label: 'Answer Text', type: 'text', placeholder: 'e.g. Support', required: true },
+              {
+                key: 'props', label: 'Display Type', type: 'select',
+                options: [
+                  { label: 'Button', value: 'BUTTON' },
+                  { label: 'Radio', value: 'RADIO' },
+                  { label: 'Option (Dropdown)', value: 'OPTION' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    tips: [
+      { icon: '💡', text: 'This produces the senior engineer JSON format. Set pIndex=99 and type=ENDING for the final "Thank You" prompt.' },
+    ],
+  },
+
+  // ─── CONDITION (for advanced users) ───
   {
     nodeType: 'condition',
     requiredFields: ['rules'],
     sections: [
       {
-        title: 'Branching Logic',
+        title: 'Condition Rules',
         icon: '🔀',
         fields: [
           {
-            key: 'combinator', label: 'When should this branch?', type: 'select',
+            key: 'combinator', label: 'Combine Rules', type: 'select',
             options: [
-              { label: 'All conditions match (AND)', value: 'and', icon: '🔗' },
-              { label: 'Any condition matches (OR)', value: 'or', icon: '⚡' },
+              { label: 'All rules match (AND)', value: 'and' },
+              { label: 'Any rule matches (OR)', value: 'or' },
             ],
           },
           {
-            key: 'rules', label: 'Conditions', type: 'rule-list', addLabel: '+ Add Condition',
+            key: 'rules', label: 'Rules', type: 'rule-list', addLabel: '+ Add Rule',
             itemSchema: [
-              { key: 'field', label: 'Variable', type: 'text', placeholder: 'Variable' },
+              { key: 'field', label: 'Field', type: 'text', placeholder: 'variable_name' },
               {
                 key: 'operator', label: 'Operator', type: 'select',
                 options: [
-                  { label: 'equals', value: 'equals' }, { label: 'not equals', value: 'notEquals' },
-                  { label: 'contains', value: 'contains' }, { label: 'greater than', value: 'greaterThan' },
-                  { label: 'less than', value: 'lessThan' }, { label: 'exists', value: 'exists' },
-                  { label: 'not exists', value: 'notExists' },
+                  { label: 'Equals', value: 'equals' },
+                  { label: 'Not Equals', value: 'notEquals' },
+                  { label: 'Contains', value: 'contains' },
+                  { label: 'Greater Than', value: 'greaterThan' },
+                  { label: 'Less Than', value: 'lessThan' },
+                  { label: 'Exists', value: 'exists' },
                 ],
               },
-              { key: 'value', label: 'Value', type: 'text', placeholder: 'Value' },
+              { key: 'value', label: 'Value', type: 'text', placeholder: 'Compare value' },
             ],
           },
         ],
       },
     ],
-    tips: [{ icon: '💡', text: 'Connect the Yes (left) and No (right) outputs to different paths.' }],
-  },
-
-  // ─── SWITCH ───
-  {
-    nodeType: 'switch',
-    requiredFields: ['variable', 'cases'],
-    sections: [
-      {
-        title: 'Switch Paths',
-        icon: '🔃',
-        fields: [
-          { key: 'variable', label: 'Switch Variable', type: 'text', placeholder: 'status', required: true },
-          {
-            key: 'cases', label: 'Cases', type: 'case-list', addLabel: '+ Add Case',
-            itemSchema: [
-              { key: 'label', label: 'Label', type: 'text', placeholder: 'Label' },
-              { key: 'value', label: 'Value', type: 'text', placeholder: 'Value' },
-            ],
-          },
-          { key: 'defaultCaseLabel', label: 'Default Label', type: 'text', placeholder: 'Default' },
-        ],
-      },
-    ],
+    tips: [{ icon: '💡', text: 'For simple routing, use Button Choice instead — no condition needed!' }],
   },
 
   // ─── DELAY ───
   {
     nodeType: 'delay',
-    requiredFields: ['duration'],
     sections: [
       {
-        title: 'Wait Duration',
+        title: 'Timer',
         icon: '⏱️',
         fields: [
-          {
-            key: 'duration', label: 'Duration', type: 'number', min: 0, required: true,
-            placeholder: '5',
-          },
+          { key: 'duration', label: 'Duration', type: 'number', min: 1 },
           {
             key: 'unit', label: 'Unit', type: 'select',
             options: [
-              { label: 'Seconds', value: 'seconds' }, { label: 'Minutes', value: 'minutes' },
-              { label: 'Hours', value: 'hours' }, { label: 'Days', value: 'days' },
+              { label: 'Seconds', value: 'seconds' },
+              { label: 'Minutes', value: 'minutes' },
+              { label: 'Hours', value: 'hours' },
             ],
           },
         ],
@@ -336,175 +283,27 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── RANDOM SPLIT ───
-  {
-    nodeType: 'randomSplit',
-    requiredFields: ['branches'],
-    sections: [
-      {
-        title: 'A/B Split',
-        icon: '🎲',
-        fields: [
-          {
-            key: 'branches', label: 'Branches', type: 'branch-list', addLabel: '+ Add Branch',
-            itemSchema: [
-              { key: 'label', label: 'Label', type: 'text', placeholder: 'Label' },
-              { key: 'percentage', label: 'Percentage', type: 'number', min: 0, max: 100 },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ─── LOOP ───
-  {
-    nodeType: 'loop',
-    sections: [
-      {
-        title: 'Loop Settings',
-        icon: '🔁',
-        fields: [
-          {
-            key: 'loopType', label: 'Loop Type', type: 'select',
-            options: [
-              { label: 'Fixed Count', value: 'count' },
-              { label: 'Until Condition', value: 'until' },
-            ],
-          },
-          {
-            key: 'iterations', label: 'Iterations', type: 'number', min: 1,
-            showWhen: { field: 'loopType', equals: 'count' },
-          },
-          {
-            key: 'condition', label: 'Stop Condition', type: 'text',
-            placeholder: "status == 'done'",
-            showWhen: { field: 'loopType', equals: 'until' },
-          },
-          { key: 'maxIterations', label: 'Max Iterations', type: 'number', min: 0, hint: '0 means no limit' },
-          { key: 'delaySeconds', label: 'Delay Between Loops (sec)', type: 'number', min: 0 },
-        ],
-      },
-    ],
-  },
-
-  // ─── END ───
-  {
-    nodeType: 'end',
-    sections: [
-      {
-        title: 'End Action',
-        icon: '🏁',
-        fields: [
-          {
-            key: 'endType', label: 'End Action', type: 'select',
-            options: [
-              { label: 'Complete Flow', value: 'complete' },
-              { label: 'Redirect to Another Flow', value: 'redirect' },
-              { label: 'Restart Flow', value: 'restart' },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ─── HTTP REQUEST ───
+  // ─── API CALL ───
   {
     nodeType: 'httpRequest',
     requiredFields: ['url'],
     sections: [
       {
-        title: 'API Request',
+        title: 'HTTP Request',
         icon: '🌐',
         fields: [
           {
             key: 'method', label: 'Method', type: 'select',
             options: [
-              { label: 'GET', value: 'GET' }, { label: 'POST', value: 'POST' },
-              { label: 'PUT', value: 'PUT' }, { label: 'DELETE', value: 'DELETE' },
-              { label: 'PATCH', value: 'PATCH' },
+              { label: 'GET', value: 'GET' },
+              { label: 'POST', value: 'POST' },
+              { label: 'PUT', value: 'PUT' },
+              { label: 'DELETE', value: 'DELETE' },
             ],
           },
           { key: 'url', label: 'URL', type: 'text', placeholder: 'https://api.example.com/endpoint', required: true },
-          { key: 'body', label: 'Request Body', type: 'textarea', placeholder: '{"key": "value"}', rows: 4 },
-          { key: 'responseVariable', label: 'Save Response As', type: 'text', placeholder: 'response' },
-        ],
-      },
-    ],
-  },
-
-  // ─── AI PROMPT ───
-  {
-    nodeType: 'aiPrompt',
-    requiredFields: ['prompt'],
-    sections: [
-      {
-        title: 'AI Settings',
-        icon: '🤖',
-        fields: [
-          { key: 'prompt', label: 'AI Prompt', type: 'textarea', placeholder: 'Describe what the AI should do...', rows: 5, required: true },
-          {
-            key: 'model', label: 'Model', type: 'select',
-            options: [
-              { label: 'GPT-4', value: 'gpt-4' }, { label: 'GPT-3.5 Turbo', value: 'gpt-3.5-turbo' },
-              { label: 'Claude 3', value: 'claude-3' }, { label: 'Gemini Pro', value: 'gemini-pro' },
-            ],
-          },
-          {
-            key: 'temperature', label: 'Temperature', type: 'slider',
-            min: 0, max: 1, step: 0.1, minLabel: 'Precise', maxLabel: 'Creative',
-          },
-          { key: 'responseVariable', label: 'Save Response As', type: 'text', placeholder: 'ai_response' },
-        ],
-      },
-    ],
-  },
-
-  // ─── DATABASE ACTION ───
-  {
-    nodeType: 'databaseAction',
-    requiredFields: ['resource'],
-    sections: [
-      {
-        title: 'Database',
-        icon: '🗃️',
-        fields: [
-          {
-            key: 'action', label: 'Action', type: 'select',
-            options: [
-              { label: 'Query', value: 'query' }, { label: 'Insert', value: 'insert' },
-              { label: 'Update', value: 'update' }, { label: 'Delete', value: 'delete' },
-            ],
-          },
-          { key: 'resource', label: 'Table / Collection', type: 'text', placeholder: 'customers', required: true },
-          { key: 'filter', label: 'Filter / Query', type: 'textarea', placeholder: "{ status: 'active' }", rows: 3 },
-          { key: 'data', label: 'Data Payload', type: 'textarea', placeholder: "{ name: 'Alice' }", rows: 3 },
-          { key: 'resultVariable', label: 'Save Result As', type: 'text', placeholder: 'db_result' },
-        ],
-      },
-    ],
-  },
-
-  // ─── SAVE VARIABLE ───
-  {
-    nodeType: 'saveVariable',
-    requiredFields: ['variableName'],
-    sections: [
-      {
-        title: 'Save Variable',
-        icon: '💾',
-        fields: [
-          { key: 'variableName', label: 'Variable Name', type: 'text', placeholder: 'e.g. user_score', required: true },
-          {
-            key: 'valueType', label: 'Value Type', type: 'select',
-            options: [
-              { label: 'Static Value', value: 'static' },
-              { label: 'Expression', value: 'expression' },
-              { label: 'From Previous Step', value: 'fromPrevious' },
-            ],
-          },
-          { key: 'value', label: 'Value', type: 'text', placeholder: 'Enter value...' },
+          { key: 'body', label: 'Body', type: 'textarea', placeholder: '{"key": "value"}', rows: 4 },
+          { key: 'responseVariable', label: 'Save Response To', type: 'text', placeholder: 'api_response' },
         ],
       },
     ],
@@ -519,9 +318,10 @@ const schemas: NodeConfigSchema[] = [
         title: 'Email',
         icon: '📧',
         fields: [
-          { key: 'to', label: 'To', type: 'text', placeholder: 'recipient@example.com', required: true },
+          { key: 'to', label: 'To', type: 'text', placeholder: 'email@example.com', required: true },
           { key: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject', required: true },
-          { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Email content...', rows: 5 },
+          { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Email content...', rows: 4 },
+          { key: 'isHtml', label: 'HTML Email', type: 'checkbox' },
         ],
       },
     ],
@@ -539,142 +339,33 @@ const schemas: NodeConfigSchema[] = [
           {
             key: 'channel', label: 'Channel', type: 'select',
             options: [
-              { label: 'In-App', value: 'inApp' }, { label: 'Push', value: 'push' },
-              { label: 'Email', value: 'email' }, { label: 'SMS', value: 'sms' },
+              { label: 'Push', value: 'push' },
+              { label: 'SMS', value: 'sms' },
+              { label: 'In-App', value: 'inApp' },
             ],
           },
           { key: 'title', label: 'Title', type: 'text', placeholder: 'Notification title', required: true },
-          { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Write the notification content...', rows: 3, required: true },
-          { key: 'target', label: 'Target', type: 'text', placeholder: 'user_id' },
+          { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Notification body', rows: 3, required: true },
+          { key: 'target', label: 'Target', type: 'text', placeholder: 'User or group' },
         ],
       },
     ],
   },
 
-  // ─── ASSIGN AGENT ───
+  // ─── END ───
   {
-    nodeType: 'assignAgent',
+    nodeType: 'end',
     sections: [
       {
-        title: 'Agent Assignment',
-        icon: '👤',
+        title: 'End Settings',
+        icon: '🏁',
         fields: [
           {
-            key: 'assignmentType', label: 'Assignment Type', type: 'select',
+            key: 'endType', label: 'End Action', type: 'select',
             options: [
-              { label: 'Round Robin', value: 'roundRobin' }, { label: 'Least Busy', value: 'leastBusy' },
-              { label: 'Specific Agent', value: 'specific' }, { label: 'By Skill', value: 'skill' },
-            ],
-          },
-          {
-            key: 'agentId', label: 'Agent ID', type: 'text', placeholder: 'agent_123',
-            showWhen: { field: 'assignmentType', equals: 'specific' },
-          },
-          {
-            key: 'skill', label: 'Skill', type: 'text', placeholder: 'billing',
-            showWhen: { field: 'assignmentType', equals: 'skill' },
-          },
-        ],
-      },
-    ],
-  },
-
-  // ─── APPROVAL REQUEST ───
-  {
-    nodeType: 'approvalRequest',
-    requiredFields: ['approverGroup', 'message'],
-    sections: [
-      {
-        title: 'Approval',
-        icon: '✅',
-        fields: [
-          { key: 'approverGroup', label: 'Approver Group', type: 'text', placeholder: 'managers', required: true },
-          { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Please review and approve...', rows: 3, required: true },
-          { key: 'timeoutMinutes', label: 'Timeout (minutes)', type: 'number', min: 0 },
-          {
-            key: 'onTimeout', label: 'On Timeout', type: 'select',
-            options: [
-              { label: 'Auto-Approve', value: 'autoApprove' },
-              { label: 'Auto-Reject', value: 'autoReject' },
-              { label: 'Escalate', value: 'escalate' },
-            ],
-          },
-          {
-            key: 'escalationTarget', label: 'Escalation Target', type: 'text', placeholder: 'team_lead',
-            showWhen: { field: 'onTimeout', equals: 'escalate' },
-          },
-        ],
-      },
-    ],
-  },
-
-  // ─── HUMAN TAKEOVER ───
-  {
-    nodeType: 'humanTakeover',
-    requiredFields: ['queue'],
-    sections: [
-      {
-        title: 'Human Takeover',
-        icon: '🤝',
-        fields: [
-          { key: 'queue', label: 'Queue', type: 'text', placeholder: 'support', required: true },
-          {
-            key: 'priority', label: 'Priority', type: 'select',
-            options: [{ label: 'Low', value: 'low' }, { label: 'Normal', value: 'normal' }, { label: 'High', value: 'high' }],
-          },
-          { key: 'handoffMessage', label: 'Handoff Message', type: 'textarea', placeholder: 'A human agent will join shortly...', rows: 3 },
-          { key: 'fallbackMessage', label: 'Fallback Message', type: 'textarea', placeholder: 'No agents available right now...', rows: 3 },
-          { key: 'includeTranscript', label: 'Include transcript in handoff', type: 'checkbox' },
-        ],
-      },
-    ],
-  },
-
-  // ─── QUESTIONNAIRE / SURVEY PROMPT ───
-  {
-    nodeType: 'questionnaire',
-    requiredFields: ['promptKey', 'text'],
-    sections: [
-      {
-        title: 'Prompt Details',
-        icon: '📋',
-        fields: [
-          { key: 'pIndex', label: 'Prompt Index (pIndex)', type: 'number', required: true },
-          { key: 'promptKey', label: 'Key', type: 'text', placeholder: 'select_language', required: true },
-          { key: 'language', label: 'Language', type: 'text', placeholder: 'ENGLISH', required: true },
-          { key: 'text', label: 'Text', type: 'textarea', placeholder: 'Ask your question here...', rows: 3, required: true },
-          {
-            key: 'promptProps', label: 'Prompt Properties', type: 'select',
-            options: [
-              { label: 'Text Input', value: 'TEXT' },
-              { label: 'Single Choice', value: 'SINGLE_CHOICE' },
-              { label: 'Multi Choice', value: 'MULTI_CHOICE' },
-              { label: 'Skippable', value: 'SKIPPABLE' },
-              { label: 'Ending', value: 'ENDING' },
-            ],
-            // Treating this as a single select in the UI for simplicity, since it's an array of strings in JSON, we can export it properly.
-          },
-        ],
-      },
-      {
-        title: 'Answers',
-        icon: '🔘',
-        fields: [
-          {
-            key: 'answers', label: 'Answers', type: 'answer-list', addLabel: '+ Add Answer',
-            itemSchema: [
-              { key: 'aIndex', label: 'Index', type: 'number' },
-              { key: 'keyPattern', label: 'Pattern', type: 'text', placeholder: '1' },
-              { key: 'keyPatternHuman', label: 'Human Pattern', type: 'text', placeholder: '1' },
-              { key: 'text', label: 'Text', type: 'text', placeholder: 'Answer Text' },
-              {
-                key: 'props', label: 'Properties', type: 'select',
-                options: [
-                  { label: 'Button', value: 'BUTTON' },
-                  { label: 'Radio', value: 'RADIO' },
-                  { label: 'Option (Dropdown)', value: 'OPTION' }
-                ]
-              }
+              { label: 'Complete', value: 'complete', description: 'End the flow normally' },
+              { label: 'Redirect', value: 'redirect', description: 'Redirect to another flow' },
+              { label: 'Restart', value: 'restart', description: 'Restart this flow' },
             ],
           },
         ],

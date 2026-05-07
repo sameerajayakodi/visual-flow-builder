@@ -353,6 +353,95 @@
   border: 1px solid var(--border);
 }
 
+/* ─── Answer Handles Bar ─── */
+.flow-node__answers-bar {
+  position: relative;
+  width: 100%;
+  height: 42px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.flow-node__answer-slot {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  top: 4px;
+}
+.flow-node__answer-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--node-color, var(--text-secondary));
+  background: var(--bg-card);
+  border: 1px solid var(--node-color-medium, var(--border));
+  padding: 1px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.flow-node--has-outputs {
+  padding-bottom: 0;
+}
+.flow-node--has-outputs .flow-node__body {
+  padding-bottom: 8px;
+}
+
+/* ─── Question Text ─── */
+.flow-node__question-text {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--node-color-light);
+  border: 1px solid var(--node-color-medium);
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ─── pIndex Badge ─── */
+.flow-node__pindex-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--node-color);
+  background: var(--node-color-light);
+  border: 1px solid var(--node-color-medium);
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* ─── Ending Badge ─── */
+.flow-node__ending-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ef4444;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+/* ─── Answer Handle (inside bar) ─── */
+.flow-handle--answer {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+
 .flow-node__actions {
   position: absolute;
   top: 50%;

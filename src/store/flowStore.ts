@@ -12,7 +12,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NODE_LIBRARY } from '../constants';
 import { isNodeConfigured } from '../config';
-import { flowToPrompts, promptsToFlow } from '../utils/flowAdapter';
+import { flowToPrompts } from '../utils/flowAdapter';
 import type {
     FlowDocument,
     FlowEdge,
@@ -155,16 +155,25 @@ export const useFlowStore = create<FlowState>()(
       if (!libraryItem) return '';
 
       const nodeId = `${type}_${uuidv4().slice(0, 8)}`;
-      const nodeData = {
+      const nodeData = JSON.parse(JSON.stringify({
           ...libraryItem.defaultData,
           label: libraryItem.label,
           nodeType: type,
           category: libraryItem.category,
           icon: libraryItem.icon,
           hasError: false,
-        } as FlowNodeData;
+        })) as FlowNodeData;
       // Auto-check configuration using schema
       (nodeData as any).isConfigured = isNodeConfigured(type, nodeData as any);
+
+      // Generate unique IDs for buttons/answers so handles don't collide
+      const d = nodeData as any;
+      if (d.buttons) {
+        d.buttons = d.buttons.map((b: any) => ({ ...b, id: `btn_${uuidv4().slice(0, 6)}` }));
+      }
+      if (d.answers) {
+        d.answers = d.answers.map((a: any) => ({ ...a, id: `ans_${uuidv4().slice(0, 6)}` }));
+      }
 
       const newNode: FlowNode = {
         id: nodeId,
@@ -191,8 +200,23 @@ export const useFlowStore = create<FlowState>()(
         nodes: state.nodes.map((n) => {
           if (n.id !== nodeId) return n;
           const merged = { ...n.data, ...data } as FlowNodeData;
+
+          // Ensure promptProps is always an array (select gives a string)
+          const m = merged as any;
+          if (m.promptProps && typeof m.promptProps === 'string') {
+            m.promptProps = [m.promptProps];
+          }
+
+          // Ensure answer props are always arrays
+          if (m.answers) {
+            m.answers = m.answers.map((a: any) => ({
+              ...a,
+              props: typeof a.props === 'string' ? [a.props] : (a.props || ['BUTTON']),
+            }));
+          }
+
           // Auto-recheck configuration status using schema
-          (merged as any).isConfigured = isNodeConfigured(merged.nodeType, merged as any);
+          m.isConfigured = isNodeConfigured(merged.nodeType, m);
           return { ...n, data: merged };
         }),
         isDirty: true,
@@ -271,15 +295,10 @@ export const useFlowStore = create<FlowState>()(
       // Validation: prevent self-connections
       if (connection.source === connection.target) return;
 
-      // Prevent duplicate connections
-      const exists = state.edges.some(
-        (e) =>
-          e.source === connection.source &&
-          e.target === connection.target &&
-          e.sourceHandle === connection.sourceHandle &&
-          e.targetHandle === connection.targetHandle
+      // Replace existing edge from same source handle (switch-case: each button → one path)
+      const cleanedEdges = state.edges.filter(
+        (e) => !(e.source === connection.source && e.sourceHandle === connection.sourceHandle)
       );
-      if (exists) return;
 
       const newEdge = {
         ...connection,
@@ -291,7 +310,7 @@ export const useFlowStore = create<FlowState>()(
       };
 
       set({
-        edges: rfAddEdge(newEdge, state.edges),
+        edges: rfAddEdge(newEdge, cleanedEdges),
         isDirty: true,
       });
     },
@@ -351,35 +370,30 @@ export const useFlowStore = create<FlowState>()(
     saveFlow: () => {
       const now = new Date().toISOString();
       set({ isDirty: false, lastSaved: now });
-      // Save to localStorage
-      const doc = get().exportFlow();
+      // Save internal format (nodes/edges) to localStorage
+      const state = get();
+      const doc = {
+        flowId: state.flowId,
+        name: state.flowName,
+        version: state.flowVersion,
+        status: state.flowStatus,
+        nodes: state.nodes,
+        edges: state.edges,
+        variables: state.variables,
+        metadata: { createdAt: now, updatedAt: now },
+      };
       localStorage.setItem('flowcraft_current_flow', JSON.stringify(doc));
     },
 
-    loadFlow: (doc) => {
-      // Support both the old format (for standard example templates) and the new format
-      const isNewFormat = doc.prompts !== undefined;
-      
-      let finalNodes = [];
-      let finalEdges = [];
-      
-      if (isNewFormat) {
-        const result = promptsToFlow(doc.prompts);
-        finalNodes = result.nodes;
-        finalEdges = result.edges;
-      } else {
-        finalNodes = (doc as any).nodes || [];
-        finalEdges = (doc as any).edges || [];
-      }
-
+    loadFlow: (doc: any) => {
       set({
-        flowId: doc.flowId,
-        flowName: doc.name,
-        flowStatus: (doc.status as any) || 'draft',
-        flowVersion: doc.version,
-        nodes: finalNodes,
-        edges: finalEdges,
-        variables: doc.variables,
+        flowId: doc.flowId || uuidv4(),
+        flowName: doc.name || 'Untitled Flow',
+        flowStatus: doc.status || 'draft',
+        flowVersion: doc.version || 1,
+        nodes: doc.nodes || [],
+        edges: doc.edges || [],
+        variables: doc.variables || {},
         isDirty: false,
         selectedNodeId: null,
         history: [],
@@ -394,6 +408,10 @@ export const useFlowStore = create<FlowState>()(
         name: state.flowName,
         version: state.flowVersion,
         status: state.flowStatus,
+        // Internal format for saving/loading
+        nodes: state.nodes,
+        edges: state.edges,
+        // Senior engineer format
         prompts: flowToPrompts(state.nodes, state.edges),
         variables: state.variables,
         metadata: {

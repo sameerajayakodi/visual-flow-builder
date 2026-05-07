@@ -51,7 +51,9 @@ const Topbar: React.FC = () => {
 
   const handleExportJson = () => {
     const doc = exportFlow();
-    const blob = new Blob([JSON.stringify(doc, null, 2)], {
+    // Export clean senior engineer format (prompts only)
+    const cleanExport = { prompts: doc.prompts };
+    const blob = new Blob([JSON.stringify(cleanExport, null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -225,7 +227,8 @@ const Topbar: React.FC = () => {
                     className="topbar__menu-item"
                     onClick={() => {
                       if (confirm(`Load "${flow.name}"? This will replace your current flow.`)) {
-                        loadFlow(flow);
+                        localStorage.removeItem('flowcraft_current_flow');
+                        loadFlow(JSON.parse(JSON.stringify(flow)));
                       }
                       setShowTemplates(false);
                     }}

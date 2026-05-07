@@ -333,13 +333,17 @@ export type FlowNodeData =
 export type FlowNode = Node<FlowNodeData>;
 export type FlowEdge = Edge;
 
-// ─── Flow Document ───
+// ─── Flow Document (supports both canvas format and export format) ───
 export interface FlowDocument {
   flowId?: string;
   name?: string;
   version?: number;
   status?: string;
-  prompts: Array<{
+  // Internal canvas format
+  nodes?: FlowNode[];
+  edges?: FlowEdge[];
+  // Senior engineer export format
+  prompts?: Array<{
     pIndex: number;
     key: string;
     language: string;
@@ -353,15 +357,7 @@ export interface FlowDocument {
       props: string[];
       nextPromptLanguage?: string;
       nextPIndex?: number;
-      id?: string; // UI visual metadata
     }>;
-    // UI visual metadata
-    id?: string;
-    type?: string;
-    position?: { x: number; y: number };
-    width?: number;
-    height?: number;
-    data?: any;
   }>;
   variables?: Record<string, FlowVariable>;
   metadata?: any;
