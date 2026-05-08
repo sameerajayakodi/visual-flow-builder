@@ -11,6 +11,7 @@ import "reactflow/dist/style.css";
 import { useFlowStore } from "../../store";
 import type { FlowNodeType } from "../../types";
 import { nodeTypes } from "../nodes";
+import { edgeTypes } from "../edges";
 
 const FlowCanvas: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -86,10 +87,11 @@ const FlowCanvas: React.FC = () => {
         onPaneClick={onPaneClick}
         onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         defaultEdgeOptions={{
-          type: "smoothstep",
+          type: "labeled",
           animated: true,
           style: { strokeWidth: 2, stroke: darkMode ? "#64748b" : "#94a3b8" },
         }}

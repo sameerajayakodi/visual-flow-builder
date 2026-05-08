@@ -287,18 +287,14 @@ export interface NotesNodeData extends BaseNodeData {
 
 export interface QuestionnaireNodeData extends BaseNodeData {
   nodeType: 'questionnaire';
-  pIndex: number;
-  promptKey: string;
+  promptKey?: string;
   language: string;
   text: string;
   promptProps: string[];
   answers: Array<{
     id: string;
     aIndex: number;
-    keyPattern: string;
-    keyPatternHuman: string;
     text: string;
-    props: string[];
   }>;
 }
 
@@ -342,22 +338,27 @@ export interface FlowDocument {
   // Internal canvas format
   nodes?: FlowNode[];
   edges?: FlowEdge[];
-  // Senior engineer export format
+  // Prompts export (questionnaire nodes only — auto-indexed)
   prompts?: Array<{
-    pIndex: number;
-    key: string;
+    promptIndex: number;
+    promptKey: string;
     language: string;
     text: string;
-    props: string[];
+    promptType: string[];
     answers: Array<{
-      aIndex: number;
-      keyPattern: string;
-      keyPatternHuman: string;
+      answerIndex: number;
       text: string;
-      props: string[];
-      nextPromptLanguage?: string;
-      nextPIndex?: number;
+      nextPromptIndex?: number;
+      nextLanguage?: string;
     }>;
+  }>;
+  // Steps export (ALL node types — generic routing map)
+  steps?: Array<{
+    id: string;
+    type: string;
+    name: string;
+    config: Record<string, any>;
+    nextSteps: Record<string, string>;
   }>;
   variables?: Record<string, FlowVariable>;
   metadata?: any;

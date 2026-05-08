@@ -29,13 +29,6 @@ function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] 
     return d.buttons.map((b: any) => ({ id: b.id, label: b.label }));
   }
 
-  // Switch node: each case → output
-  if (d.nodeType === 'switch' && d.cases?.length > 0) {
-    const items = d.cases.map((c: any) => ({ id: c.id, label: c.label || c.value }));
-    if (d.hasDefault !== false) items.push({ id: 'default', label: 'Default' });
-    return items;
-  }
-
   return null;
 }
 
@@ -189,8 +182,8 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
           <div className="flow-node__info">
             <div className="flow-node__title-row">
               <span className="flow-node__label">{data.label}</span>
-              {qData && (
-                <span className="flow-node__pindex-badge">#{qData.pIndex}</span>
+              {qData && qData.language && qData.language !== 'ENGLISH' && (
+                <span className="flow-node__pindex-badge">{qData.language}</span>
               )}
               <span className={`flow-node__status flow-node__status--${statusTone}`}>
                 {statusLabel}

@@ -12,7 +12,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NODE_LIBRARY } from '../constants';
 import { isNodeConfigured } from '../config';
-import { flowToPrompts } from '../utils/flowAdapter';
+import { flowToPrompts, flowToSteps } from '../utils/flowAdapter';
 import type {
     FlowDocument,
     FlowEdge,
@@ -196,6 +196,8 @@ export const useFlowStore = create<FlowState>()(
       const state = get();
       state.pushHistory();
 
+      let updatedEdges = state.edges;
+
       set({
         nodes: state.nodes.map((n) => {
           if (n.id !== nodeId) return n;
@@ -215,10 +217,35 @@ export const useFlowStore = create<FlowState>()(
             }));
           }
 
+          // ─── Sync edge labels when answers/buttons/cases are renamed ───
+          const dynamicItems: { id: string; label: string }[] = [];
+          if (m.answers?.length) {
+            m.answers.forEach((a: any) => dynamicItems.push({ id: a.id, label: a.text }));
+          } else if (m.buttons?.length) {
+            m.buttons.forEach((b: any) => dynamicItems.push({ id: b.id, label: b.label }));
+          } else if (m.cases?.length) {
+            m.cases.forEach((c: any) => dynamicItems.push({ id: c.id, label: c.label || c.value }));
+          }
+          if (dynamicItems.length > 0) {
+            updatedEdges = updatedEdges.map(e => {
+              if (e.source !== nodeId) return e;
+              const matchItem = dynamicItems.find(item => item.id === e.sourceHandle);
+              if (matchItem && matchItem.label) {
+                return {
+                  ...e,
+                  label: matchItem.label,
+                  data: { ...e.data, sourceAnswerLabel: matchItem.label },
+                };
+              }
+              return e;
+            });
+          }
+
           // Auto-recheck configuration status using schema
           m.isConfigured = isNodeConfigured(merged.nodeType, m);
           return { ...n, data: merged };
         }),
+        edges: updatedEdges,
         isDirty: true,
       });
     },
@@ -300,13 +327,46 @@ export const useFlowStore = create<FlowState>()(
         (e) => !(e.source === connection.source && e.sourceHandle === connection.sourceHandle)
       );
 
+      // ─── Resolve label from source node's dynamic outputs ───
+      let edgeLabel = '';
+      const sourceNode = state.nodes.find(n => n.id === connection.source);
+      if (sourceNode && connection.sourceHandle && connection.sourceHandle !== 'source') {
+        const d = sourceNode.data as any;
+        // Questionnaire answers
+        if (d.answers?.length) {
+          const match = d.answers.find((a: any) => a.id === connection.sourceHandle);
+          if (match) edgeLabel = match.text;
+        }
+        // Button node
+        if (!edgeLabel && d.buttons?.length) {
+          const match = d.buttons.find((b: any) => b.id === connection.sourceHandle);
+          if (match) edgeLabel = match.label;
+        }
+        // Switch cases
+        if (!edgeLabel && d.cases?.length) {
+          const match = d.cases.find((c: any) => c.id === connection.sourceHandle);
+          if (match) edgeLabel = match.label || match.value;
+        }
+        // Condition yes/no
+        if (!edgeLabel && d.nodeType === 'condition') {
+          if (connection.sourceHandle === 'yes') edgeLabel = 'Yes';
+          if (connection.sourceHandle === 'no') edgeLabel = 'No';
+        }
+        // Default handle id for switch
+        if (!edgeLabel && connection.sourceHandle === 'default') {
+          edgeLabel = 'Default';
+        }
+      }
+
       const newEdge = {
         ...connection,
         id: `edge_${uuidv4().slice(0, 8)}`,
-        type: 'smoothstep',
+        type: 'labeled',
         animated: true,
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { strokeWidth: 2 },
+        label: edgeLabel || undefined,
+        data: edgeLabel ? { sourceAnswerLabel: edgeLabel } : undefined,
       };
 
       set({
@@ -386,13 +446,60 @@ export const useFlowStore = create<FlowState>()(
     },
 
     loadFlow: (doc: any) => {
+      // ─── Auto-resolve edge labels for backward compatibility ───
+      const nodes = doc.nodes || [];
+      const rawEdges = doc.edges || [];
+      const labeledEdges = rawEdges.map((edge: any) => {
+        // Upgrade old edge types to labeled
+        const upgraded = { ...edge, type: 'labeled' };
+
+        // Skip if already has a label or no sourceHandle
+        if (upgraded.label || !upgraded.sourceHandle || upgraded.sourceHandle === 'source') {
+          return upgraded;
+        }
+
+        // Find source node and resolve the label
+        const srcNode = nodes.find((n: any) => n.id === upgraded.source);
+        if (!srcNode) return upgraded;
+
+        const d = srcNode.data as any;
+        let resolvedLabel = '';
+
+        if (d.answers?.length) {
+          const match = d.answers.find((a: any) => a.id === upgraded.sourceHandle);
+          if (match) resolvedLabel = match.text;
+        }
+        if (!resolvedLabel && d.buttons?.length) {
+          const match = d.buttons.find((b: any) => b.id === upgraded.sourceHandle);
+          if (match) resolvedLabel = match.label;
+        }
+        if (!resolvedLabel && d.cases?.length) {
+          const match = d.cases.find((c: any) => c.id === upgraded.sourceHandle);
+          if (match) resolvedLabel = match.label || match.value;
+        }
+        if (!resolvedLabel && d.nodeType === 'condition') {
+          if (upgraded.sourceHandle === 'yes') resolvedLabel = 'Yes';
+          if (upgraded.sourceHandle === 'no') resolvedLabel = 'No';
+        }
+        if (!resolvedLabel && upgraded.sourceHandle === 'default') {
+          resolvedLabel = 'Default';
+        }
+
+        if (resolvedLabel) {
+          upgraded.label = resolvedLabel;
+          upgraded.data = { ...upgraded.data, sourceAnswerLabel: resolvedLabel };
+        }
+
+        return upgraded;
+      });
+
       set({
         flowId: doc.flowId || uuidv4(),
         flowName: doc.name || 'Untitled Flow',
         flowStatus: doc.status || 'draft',
         flowVersion: doc.version || 1,
-        nodes: doc.nodes || [],
-        edges: doc.edges || [],
+        nodes,
+        edges: labeledEdges,
         variables: doc.variables || {},
         isDirty: false,
         selectedNodeId: null,
@@ -411,8 +518,10 @@ export const useFlowStore = create<FlowState>()(
         // Internal format for saving/loading
         nodes: state.nodes,
         edges: state.edges,
-        // Senior engineer format
+        // Senior engineer format (questionnaire only)
         prompts: flowToPrompts(state.nodes, state.edges),
+        // Generic routing map (ALL node types)
+        steps: flowToSteps(state.nodes, state.edges),
         variables: state.variables,
         metadata: {
           createdAt: new Date().toISOString(),

@@ -16,9 +16,9 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
       { id: 't1', type: 'trigger', position: { x: 400, y: 50 }, data: { label: 'Chat Starts', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false } },
       { id: 'welcome', type: 'text', position: { x: 400, y: 180 }, data: { label: 'Welcome', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Hello! Welcome to support. How can we help?' } },
       { id: 'dept', type: 'button', position: { x: 400, y: 340 }, data: { label: 'Choose Dept', nodeType: 'button', category: 'message', icon: '🔘', isConfigured: true, hasError: false, message: 'Select a department:', buttons: [
-        { id: 'btn_sup', label: 'Support', value: 'support', type: 'reply' },
-        { id: 'btn_sal', label: 'Sales', value: 'sales', type: 'reply' },
-        { id: 'btn_hr', label: 'HR', value: 'hr', type: 'reply' },
+        { id: 'btn_sup', label: 'Support' },
+        { id: 'btn_sal', label: 'Sales' },
+        { id: 'btn_hr', label: 'HR' },
       ] } },
       { id: 'sup_msg', type: 'text', position: { x: 100, y: 530 }, data: { label: 'Support Reply', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Our support team will assist you shortly.' } },
       { id: 'sal_msg', type: 'text', position: { x: 400, y: 530 }, data: { label: 'Sales Reply', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'A sales rep will contact you soon!' } },
@@ -53,9 +53,9 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
       { id: 'get_name', type: 'inputRequest', position: { x: 420, y: 310 }, data: { label: 'Get Name', nodeType: 'inputRequest', category: 'message', icon: '📝', isConfigured: true, hasError: false, prompt: 'What is your name?', variableName: 'lead_name', inputType: 'text', validation: { required: true } } },
       { id: 'get_email', type: 'inputRequest', position: { x: 420, y: 460 }, data: { label: 'Get Email', nodeType: 'inputRequest', category: 'message', icon: '📝', isConfigured: true, hasError: false, prompt: 'And your email?', variableName: 'lead_email', inputType: 'email', validation: { required: true } } },
       { id: 'interest', type: 'card', position: { x: 420, y: 610 }, data: { label: 'Service Interest', nodeType: 'card', category: 'message', icon: '🃏', isConfigured: true, hasError: false, title: 'What interests you?', subtitle: 'Pick a plan', body: 'Choose the service that fits your needs.', buttons: [
-        { id: 'btn_basic', label: 'Basic Plan', value: 'basic', type: 'reply' },
-        { id: 'btn_pro', label: 'Pro Plan', value: 'pro', type: 'reply' },
-        { id: 'btn_ent', label: 'Enterprise', value: 'enterprise', type: 'reply' },
+        { id: 'btn_basic', label: 'Basic Plan' },
+        { id: 'btn_pro', label: 'Pro Plan' },
+        { id: 'btn_ent', label: 'Enterprise' },
       ] } },
       { id: 'check_ent', type: 'condition', position: { x: 420, y: 800 }, data: { label: 'Enterprise?', nodeType: 'condition', category: 'logic', icon: '🔀', isConfigured: true, hasError: false, combinator: 'and', rules: [{ field: 'interest', operator: 'equals', value: 'enterprise' }] } },
       { id: 'api_crm', type: 'httpRequest', position: { x: 150, y: 970 }, data: { label: 'Save to CRM', nodeType: 'httpRequest', category: 'action', icon: '🌐', isConfigured: true, hasError: false, method: 'POST', url: 'https://api.crm.com/leads', body: '{"name":"{{lead_name}}","email":"{{lead_email}}"}', responseVariable: 'crm_response' } },
@@ -96,21 +96,21 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
     status: 'draft',
     nodes: [
       { id: 't1', type: 'trigger', position: { x: 400, y: 40 }, data: { label: 'Survey Start', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false } },
-      { id: 'q_lang', type: 'questionnaire', position: { x: 400, y: 190 }, data: { label: 'Select Language', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, pIndex: 0, promptKey: 'select_language', language: 'ENGLISH', text: 'Please select your preferred language.', promptProps: ['SINGLE_CHOICE'], answers: [
-        { id: 'ans_en', aIndex: 1, keyPattern: '1', keyPatternHuman: '1', text: 'ENGLISH', props: ['BUTTON'] },
-        { id: 'ans_ta', aIndex: 2, keyPattern: '2', keyPatternHuman: '2', text: 'TAMIL', props: ['BUTTON'] },
+      { id: 'q_lang', type: 'questionnaire', position: { x: 400, y: 190 }, data: { label: 'Select Language', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'select_language', language: 'ENGLISH', text: 'Please select your preferred language.', promptProps: ['SINGLE_CHOICE'], answers: [
+        { id: 'ans_en', aIndex: 1, text: 'ENGLISH' },
+        { id: 'ans_ta', aIndex: 2, text: 'TAMIL' },
       ] } },
-      { id: 'q_age', type: 'questionnaire', position: { x: 400, y: 400 }, data: { label: 'Age Range', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, pIndex: 1, promptKey: 'age_range', language: 'ENGLISH', text: 'What is your age range?', promptProps: ['SINGLE_CHOICE'], answers: [
-        { id: 'ans_u18', aIndex: 1, keyPattern: '1', keyPatternHuman: '1', text: '0 - 17', props: ['RADIO'] },
-        { id: 'ans_1825', aIndex: 2, keyPattern: '2', keyPatternHuman: '2', text: '18 - 25', props: ['RADIO'] },
-        { id: 'ans_2640', aIndex: 3, keyPattern: '3', keyPatternHuman: '3', text: '26 - 40', props: ['RADIO'] },
+      { id: 'q_age', type: 'questionnaire', position: { x: 400, y: 400 }, data: { label: 'Age Range', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'age_range', language: 'ENGLISH', text: 'What is your age range?', promptProps: ['SINGLE_CHOICE'], answers: [
+        { id: 'ans_u18', aIndex: 1, text: '0 - 17' },
+        { id: 'ans_1825', aIndex: 2, text: '18 - 25' },
+        { id: 'ans_2640', aIndex: 3, text: '26 - 40' },
       ] } },
-      { id: 'q_feedback', type: 'questionnaire', position: { x: 650, y: 620 }, data: { label: 'Service Rating', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, pIndex: 2, promptKey: 'user_feedback', language: 'ENGLISH', text: 'Since you are an adult, how would you rate our service?', promptProps: ['SINGLE_CHOICE'], answers: [
-        { id: 'ans_good', aIndex: 1, keyPattern: '1', keyPatternHuman: '1', text: 'Good', props: ['BUTTON'] },
-        { id: 'ans_avg', aIndex: 2, keyPattern: '2', keyPatternHuman: '2', text: 'Average', props: ['BUTTON'] },
-        { id: 'ans_bad', aIndex: 3, keyPattern: '3', keyPatternHuman: '3', text: 'Bad', props: ['BUTTON'] },
+      { id: 'q_feedback', type: 'questionnaire', position: { x: 650, y: 620 }, data: { label: 'Service Rating', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'user_feedback', language: 'ENGLISH', text: 'Since you are an adult, how would you rate our service?', promptProps: ['SINGLE_CHOICE'], answers: [
+        { id: 'ans_good', aIndex: 1, text: 'Good' },
+        { id: 'ans_avg', aIndex: 2, text: 'Average' },
+        { id: 'ans_bad', aIndex: 3, text: 'Bad' },
       ] } },
-      { id: 'q_end', type: 'questionnaire', position: { x: 400, y: 840 }, data: { label: 'Thank You', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, pIndex: 99, promptKey: 'end_thank_you', language: 'ENGLISH', text: 'Thank you for participating! Goodbye.', promptProps: ['ENDING'], answers: [] } },
+      { id: 'q_end', type: 'questionnaire', position: { x: 400, y: 840 }, data: { label: 'Thank You', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'end_thank_you', language: 'ENGLISH', text: 'Thank you for participating! Goodbye.', promptProps: ['ENDING'], answers: [] } },
     ],
     edges: [
       { id: 'e1', source: 't1', target: 'q_lang', type: 'smoothstep', animated: true },
@@ -144,9 +144,9 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
       { id: 'wait_ship', type: 'delay', position: { x: 150, y: 850 }, data: { label: 'Wait 2 Days', nodeType: 'delay', category: 'logic', icon: '⏱️', isConfigured: true, hasError: false, duration: 2, unit: 'hours' } },
       { id: 'delivery_note', type: 'notification', position: { x: 150, y: 1010 }, data: { label: 'Delivery Push', nodeType: 'notification', category: 'action', icon: '🔔', isConfigured: true, hasError: false, channel: 'push', title: 'Delivered!', message: 'Your order #{{order_id}} was delivered.', target: '{{customer_id}}' } },
       { id: 'rate_card', type: 'card', position: { x: 150, y: 1180 }, data: { label: 'Rate Experience', nodeType: 'card', category: 'message', icon: '🃏', isConfigured: true, hasError: false, title: 'How was your order?', subtitle: 'Rate your experience', body: '', buttons: [
-        { id: 'btn_5star', label: '⭐ 5 Stars', value: '5', type: 'reply' },
-        { id: 'btn_3star', label: '⭐ 3 Stars', value: '3', type: 'reply' },
-        { id: 'btn_1star', label: '⭐ 1 Star', value: '1', type: 'reply' },
+        { id: 'btn_5star', label: '⭐ 5 Stars' },
+        { id: 'btn_3star', label: '⭐ 3 Stars' },
+        { id: 'btn_1star', label: '⭐ 1 Star' },
       ] } },
       { id: 'backorder', type: 'text', position: { x: 650, y: 690 }, data: { label: 'Backorder Notice', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Sorry, your item is out of stock. We will notify you when it is available.' } },
       { id: 'end1', type: 'end', position: { x: 400, y: 1380 }, data: { label: 'End', nodeType: 'end', category: 'utility', icon: '🏁', isConfigured: true, hasError: false, endType: 'complete' } },

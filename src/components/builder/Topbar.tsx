@@ -51,8 +51,14 @@ const Topbar: React.FC = () => {
 
   const handleExportJson = () => {
     const doc = exportFlow();
-    // Export clean senior engineer format (prompts only)
-    const cleanExport = { prompts: doc.prompts };
+    // Export clean format: prompts (questionnaire only) + steps (all nodes)
+    const cleanExport = {
+      flowId: doc.flowId,
+      name: doc.name,
+      version: doc.version,
+      prompts: doc.prompts,
+      steps: doc.steps,
+    };
     const blob = new Blob([JSON.stringify(cleanExport, null, 2)], {
       type: 'application/json',
     });

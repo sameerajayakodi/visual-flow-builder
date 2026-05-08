@@ -56,7 +56,7 @@ const schemas: NodeConfigSchema[] = [
           {
             key: 'message', label: 'Message', type: 'textarea',
             placeholder: 'Type your message here...', rows: 4, required: true,
-            hint: 'Use {{variable}} to insert dynamic values',
+            hint: 'insert message content here',
           },
         ],
       },
@@ -81,14 +81,6 @@ const schemas: NodeConfigSchema[] = [
             addLabel: '+ Add Button', maxItems: 10,
             itemSchema: [
               { key: 'label', label: 'Label', type: 'text', placeholder: 'Button label', required: true },
-              {
-                key: 'type', label: 'Type', type: 'select',
-                options: [
-                  { label: 'Reply', value: 'reply' },
-                  { label: 'URL', value: 'url' },
-                  { label: 'Action', value: 'action' },
-                ],
-              },
             ],
           },
         ],
@@ -121,13 +113,6 @@ const schemas: NodeConfigSchema[] = [
             addLabel: '+ Add Button', maxItems: 5,
             itemSchema: [
               { key: 'label', label: 'Label', type: 'text', placeholder: 'Button label' },
-              {
-                key: 'type', label: 'Type', type: 'select',
-                options: [
-                  { label: 'Reply', value: 'reply' },
-                  { label: 'URL', value: 'url' },
-                ],
-              },
             ],
           },
         ],
@@ -164,14 +149,14 @@ const schemas: NodeConfigSchema[] = [
   // ─── QUESTIONNAIRE / SURVEY PROMPT ───
   {
     nodeType: 'questionnaire',
-    requiredFields: ['promptKey', 'text'],
+    requiredFields: ['text'],
     sections: [
       {
         title: 'Prompt Details',
         icon: '📋',
         fields: [
-          { key: 'pIndex', label: 'Prompt Index (pIndex)', type: 'number', required: true, hint: 'Unique numeric ID. Use 99 for ending prompts.' },
-          { key: 'promptKey', label: 'Key', type: 'text', placeholder: 'select_language', required: true },
+          { key: 'text', label: 'Question Text', type: 'textarea', placeholder: 'Ask your question here...', rows: 3, required: true },
+          { key: 'promptKey', label: 'Prompt Key', type: 'text', placeholder: 'e.g. select_language', hint: 'Optional identifier for the backend.' },
           {
             key: 'language', label: 'Language', type: 'select',
             options: [
@@ -181,7 +166,6 @@ const schemas: NodeConfigSchema[] = [
               { label: 'HINDI', value: 'HINDI' },
             ],
           },
-          { key: 'text', label: 'Question Text', type: 'textarea', placeholder: 'Ask your question here...', rows: 3, required: true },
           {
             key: 'promptProps', label: 'Prompt Type', type: 'select',
             options: [
@@ -202,22 +186,11 @@ const schemas: NodeConfigSchema[] = [
             key: 'answers', label: 'Answer Options', type: 'answer-list', addLabel: '+ Add Answer',
             hint: 'Each answer becomes an output handle you can connect to the next prompt.',
             itemSchema: [
-              { key: 'text', label: 'Answer Text', type: 'text', placeholder: 'e.g. Support', required: true },
-              {
-                key: 'props', label: 'Display Type', type: 'select',
-                options: [
-                  { label: 'Button', value: 'BUTTON' },
-                  { label: 'Radio', value: 'RADIO' },
-                  { label: 'Option (Dropdown)', value: 'OPTION' },
-                ],
-              },
+              { key: 'text', label: 'Answer Text', type: 'text', placeholder: 'e.g. English, Sinhala', required: true },
             ],
           },
         ],
       },
-    ],
-    tips: [
-      // { icon: '💡', text: 'This produces the senior engineer JSON format. Set pIndex=99 and type=ENDING for the final "Thank You" prompt.' },
     ],
   },
 

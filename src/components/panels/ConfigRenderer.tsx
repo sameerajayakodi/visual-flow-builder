@@ -249,8 +249,6 @@ const ListWidget: React.FC<{
     // Smart defaults based on list type
     if (listType === 'button-list') {
       newItem.label = `Option ${items.length + 1}`;
-      newItem.value = `option_${items.length + 1}`;
-      newItem.type = newItem.type || 'reply';
     } else if (listType === 'case-list') {
       newItem.label = `Case ${items.length + 1}`;
       newItem.value = `value_${items.length + 1}`;
@@ -272,11 +270,9 @@ const ListWidget: React.FC<{
       newItem.body = '';
       newItem.imageUrl = '';
     } else if (listType === 'answer-list') {
-      newItem.aIndex = items.length + 1;
-      newItem.keyPattern = `${items.length + 1}`;
-      newItem.keyPatternHuman = `${items.length + 1}`;
+      const maxIndex = items.reduce((max: number, i: any) => Math.max(max, Number(i.aIndex) || 0), 0);
+      newItem.aIndex = maxIndex + 1;
       newItem.text = `Option ${items.length + 1}`;
-      newItem.props = ['BUTTON'];
     }
     onChange([...items, newItem]);
   };
