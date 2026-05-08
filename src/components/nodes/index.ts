@@ -5,7 +5,6 @@ export const nodeTypes = {
   text: FlowNode,
   button: FlowNode,
   card: FlowNode,
-  inputRequest: FlowNode,
   questionnaire: FlowNode,
   condition: FlowNode,
   delay: FlowNode,

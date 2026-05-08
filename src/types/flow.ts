@@ -18,7 +18,6 @@ export type FlowNodeType =
   | 'card'
   | 'carousel'
   | 'form'
-  | 'inputRequest'
   | 'condition'
   | 'switch'
   | 'delay'
@@ -162,20 +161,6 @@ export interface SwitchNodeData extends BaseNodeData {
   defaultCaseLabel?: string;
 }
 
-export interface InputNodeData extends BaseNodeData {
-  nodeType: 'inputRequest';
-  prompt: string;
-  variableName: string;
-  inputType: 'text' | 'number' | 'email' | 'phone' | 'date' | 'select';
-  validation?: {
-    required: boolean;
-    pattern?: string;
-    min?: number;
-    max?: number;
-  };
-  options?: string[];
-}
-
 export interface DelayNodeData extends BaseNodeData {
   nodeType: 'delay';
   duration: number;
@@ -291,6 +276,7 @@ export interface QuestionnaireNodeData extends BaseNodeData {
   language: string;
   text: string;
   promptProps: string[];
+  inputFormat?: 'button' | 'checkbox' | 'radio' | 'dropdown' | 'list';
   answers: Array<{
     id: string;
     aIndex: number;
@@ -308,7 +294,6 @@ export type FlowNodeData =
   | FormNodeData
   | ConditionNodeData
   | SwitchNodeData
-  | InputNodeData
   | DelayNodeData
   | RandomSplitNodeData
   | LoopNodeData

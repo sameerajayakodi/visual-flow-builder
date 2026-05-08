@@ -17,7 +17,17 @@ const DebugPanel: React.FC = () => {
   const flowJson = useMemo(() => {
     if (!showDebugPanel && !showJsonPreview) return '';
     try {
-      return JSON.stringify(exportFlow(), null, 2);
+      const doc = exportFlow();
+      const cleanExport = {
+        flowId: doc.flowId,
+        name: doc.name,
+        version: doc.version,
+        status: doc.status,
+        prompts: doc.prompts,
+        steps: doc.steps,
+        metadata: doc.metadata
+      };
+      return JSON.stringify(cleanExport, null, 2);
     } catch {
       return '{}';
     }

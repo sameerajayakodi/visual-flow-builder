@@ -14,55 +14,90 @@ import type { FlowNode, FlowEdge, QuestionnaireNodeData } from '../types';
 export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
   const prompts: any[] = [];
 
+  // Build nodeId → global step index lookup (0-based) to match the steps array
+  const stepNodes = nodes.filter(n => n.data.nodeType !== 'notes');
+  const globalNodeIndexMap = new Map<string, number>();
+  stepNodes.forEach((node, i) => {
+    globalNodeIndexMap.set(node.id, i);
+  });
+
   // Get questionnaire nodes sorted by Y position (top to bottom)
   const qNodes = nodes
     .filter(n => n.type === 'questionnaire')
     .sort((a, b) => (a.position?.y ?? 0) - (b.position?.y ?? 0));
 
-  // Build nodeId → auto-generated promptIndex lookup
-  const nodeIndexMap = new Map<string, number>();
-  qNodes.forEach((node, i) => {
-    nodeIndexMap.set(node.id, i + 1);
-  });
-
   qNodes.forEach((node, i) => {
     const data = node.data as QuestionnaireNodeData;
+    const d = data as any;
 
     const type = Array.isArray(data.promptProps)
       ? data.promptProps
       : (data.promptProps ? [data.promptProps] : ['SINGLE_CHOICE']);
 
-    const answers = (data.answers || []).map((ans, ansIdx) => {
-      // Find edge from this answer handle → next node
-      const edge = edges.find(e => e.source === node.id && e.sourceHandle === ans.id);
-      let nextPromptIndex = 99; // Default: go to END
-      let nextLanguage = data.language || 'ENGLISH';
+    const isTextInput = type.includes('TEXT');
+    const isEnding = type.includes('ENDING');
+    const inputFormat = (d.inputFormat || 'BUTTON').toUpperCase();
+
+    // Build prompt object matching the exact requested JSON payload
+    const prompt: any = {
+      pIndex: i,
+      key: data.promptKey || `prompt_${i}`,
+      language: data.language || 'ENGLISH',
+      text: data.text || '',
+      props: type,
+    };
+
+    if (isTextInput) {
+      // TEXT mode: no predefined answers, but keep variable mappings
+      if (d.variableName) prompt.saveToVariable = d.variableName;
+      if (d.inputType) prompt.expectedInputType = d.inputType;
+
+      // Resolve next from default edge
+      const edge = edges.find(e => e.source === node.id);
+      let nextPIndex = 99;
+      let nextPromptLanguage = data.language || 'ENGLISH';
 
       if (edge) {
         const targetNode = nodes.find(n => n.id === edge.target);
-        if (targetNode && targetNode.type === 'questionnaire') {
-          const targetData = targetNode.data as QuestionnaireNodeData;
-          nextPromptIndex = nodeIndexMap.get(targetNode.id) ?? 99;
-          nextLanguage = targetData.language || 'ENGLISH';
+        if (targetNode) {
+          nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? 99;
+          nextPromptLanguage = (targetNode.data as any).language || 'ENGLISH';
         }
       }
+      
+      prompt.answers = [];
+    } else if (isEnding) {
+      prompt.answers = [];
+    } else {
+      // Choice mode: map answers with routing
+      prompt.answers = (data.answers || []).map((ans, ansIdx) => {
+        const edge = edges.find(e => e.source === node.id && e.sourceHandle === ans.id);
+        let nextPIndex = 99;
+        let nextPromptLanguage = data.language || 'ENGLISH';
 
-      return {
-        answerIndex: ansIdx + 1,
-        text: ans.text,
-        nextPromptIndex,
-        nextLanguage,
-      };
-    });
+        if (edge) {
+          const targetNode = nodes.find(n => n.id === edge.target);
+          if (targetNode) {
+            nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? 99;
+            nextPromptLanguage = (targetNode.data as any).language || 'ENGLISH';
+          }
+        }
 
-    prompts.push({
-      promptIndex: i + 1,
-      promptKey: data.promptKey || `prompt_${i + 1}`,
-      language: data.language || 'ENGLISH',
-      text: data.text || '',
-      promptType: type,
-      answers,
-    });
+        const aIndex = ans.aIndex || (ansIdx + 1);
+
+        return {
+          aIndex,
+          keyPattern: String(aIndex),
+          keyPatternHuman: String(aIndex),
+          text: ans.text,
+          props: [inputFormat],
+          nextPromptLanguage,
+          nextPIndex,
+        };
+      });
+    }
+
+    prompts.push(prompt);
   });
 
   return prompts;
@@ -73,8 +108,8 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
 // ─────────────────────────────────────────────────────────────
 
 export interface FlowStep {
-  /** Unique step identifier (node ID) */
-  id: string;
+  /** Unique step identifier (integer index) */
+  id: number;
   /** Node type: trigger, text, button, questionnaire, condition, delay, end, etc. */
   type: string;
   /** Human-readable name */
@@ -91,7 +126,7 @@ export interface FlowStep {
    * 
    * Labels for each index are in config.buttons or config.answers.
    */
-  nextSteps: Record<string, string>;
+  nextSteps: Record<string, number>;
 }
 
 /**
@@ -104,11 +139,14 @@ export interface FlowStep {
 export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
   const steps: FlowStep[] = [];
 
-  nodes.forEach(node => {
+  const stepNodes = nodes.filter(n => n.data.nodeType !== 'notes');
+  const globalNodeIndexMap = new Map<string, number>();
+  stepNodes.forEach((node, i) => {
+    globalNodeIndexMap.set(node.id, i);
+  });
+
+  stepNodes.forEach(node => {
     const d = node.data as any;
-    
-    // Skip notes — they're just visual annotations
-    if (d.nodeType === 'notes') return;
 
     // ─── Build config (clean, no visual metadata) ───
     const config: Record<string, any> = {};
@@ -164,14 +202,17 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
     }
 
     // ─── Build nextSteps from edges using integer indexes ───
-    const nextSteps: Record<string, string> = {};
+    const nextSteps: Record<string, number> = {};
     const outEdges = edges.filter(e => e.source === node.id);
 
     if (outEdges.length === 0) {
       // End node or disconnected — no nextSteps
     } else if (outEdges.length === 1 && (!outEdges[0].sourceHandle || outEdges[0].sourceHandle === 'source')) {
       // Simple node → single "default" next step
-      nextSteps['default'] = outEdges[0].target;
+      const targetIndex = globalNodeIndexMap.get(outEdges[0].target);
+      if (targetIndex !== undefined) {
+        nextSteps['default'] = targetIndex;
+      }
     } else {
       // Multi-output: resolve each handle to its 1-based integer index
       outEdges.forEach(edge => {
@@ -199,12 +240,15 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
           routeIndex = 'default';
         }
 
-        nextSteps[String(routeIndex)] = edge.target;
+        const targetIndex = globalNodeIndexMap.get(edge.target);
+        if (targetIndex !== undefined) {
+          nextSteps[String(routeIndex)] = targetIndex;
+        }
       });
     }
 
     steps.push({
-      id: node.id,
+      id: globalNodeIndexMap.get(node.id)!,
       type: d.nodeType,
       name: d.label,
       config,

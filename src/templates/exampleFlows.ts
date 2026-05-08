@@ -1,5 +1,5 @@
 // ─── Example Templates ───
-// Uses ALL node types: trigger, text, button, card, inputRequest, questionnaire,
+// Uses ALL node types: trigger, text, button, card, questionnaire (prompt),
 // condition, delay, httpRequest, sendEmail, notification, end, notes
 
 export const EXAMPLE_FLOWS: Record<string, any> = {
@@ -40,7 +40,7 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
   },
 
   // ══════════════════════════════════════════════
-  // 2. LEAD GENERATION — inputRequest, card, condition, httpRequest, sendEmail, delay, notification
+  // 2. LEAD GENERATION — questionnaire (TEXT mode), card, condition, httpRequest, sendEmail, delay, notification
   // ══════════════════════════════════════════════
   lead_generation: {
     flowId: 'lead-gen',
@@ -50,8 +50,8 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
     nodes: [
       { id: 't1', type: 'trigger', position: { x: 420, y: 30 }, data: { label: 'Visitor Arrives', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false, triggerType: 'manual' } },
       { id: 'greet', type: 'text', position: { x: 420, y: 160 }, data: { label: 'Greeting', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Hi! Want a free quote? Let us know your details.' } },
-      { id: 'get_name', type: 'inputRequest', position: { x: 420, y: 310 }, data: { label: 'Get Name', nodeType: 'inputRequest', category: 'message', icon: '📝', isConfigured: true, hasError: false, prompt: 'What is your name?', variableName: 'lead_name', inputType: 'text', validation: { required: true } } },
-      { id: 'get_email', type: 'inputRequest', position: { x: 420, y: 460 }, data: { label: 'Get Email', nodeType: 'inputRequest', category: 'message', icon: '📝', isConfigured: true, hasError: false, prompt: 'And your email?', variableName: 'lead_email', inputType: 'email', validation: { required: true } } },
+      { id: 'get_name', type: 'questionnaire', position: { x: 420, y: 310 }, data: { label: 'Get Name', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, text: 'What is your name?', promptProps: ['TEXT'], language: 'ENGLISH', variableName: 'lead_name', inputType: 'text', answers: [] } },
+      { id: 'get_email', type: 'questionnaire', position: { x: 420, y: 460 }, data: { label: 'Get Email', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, text: 'And your email?', promptProps: ['TEXT'], language: 'ENGLISH', variableName: 'lead_email', inputType: 'email', answers: [] } },
       { id: 'interest', type: 'card', position: { x: 420, y: 610 }, data: { label: 'Service Interest', nodeType: 'card', category: 'message', icon: '🃏', isConfigured: true, hasError: false, title: 'What interests you?', subtitle: 'Pick a plan', body: 'Choose the service that fits your needs.', buttons: [
         { id: 'btn_basic', label: 'Basic Plan' },
         { id: 'btn_pro', label: 'Pro Plan' },
@@ -96,16 +96,16 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
     status: 'draft',
     nodes: [
       { id: 't1', type: 'trigger', position: { x: 400, y: 40 }, data: { label: 'Survey Start', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false } },
-      { id: 'q_lang', type: 'questionnaire', position: { x: 400, y: 190 }, data: { label: 'Select Language', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'select_language', language: 'ENGLISH', text: 'Please select your preferred language.', promptProps: ['SINGLE_CHOICE'], answers: [
+      { id: 'q_lang', type: 'questionnaire', position: { x: 400, y: 190 }, data: { label: 'Select Language', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'select_language', language: 'ENGLISH', text: 'Please select your preferred language.', promptProps: ['SINGLE_CHOICE'], inputFormat: 'button', answers: [
         { id: 'ans_en', aIndex: 1, text: 'ENGLISH' },
         { id: 'ans_ta', aIndex: 2, text: 'TAMIL' },
       ] } },
-      { id: 'q_age', type: 'questionnaire', position: { x: 400, y: 400 }, data: { label: 'Age Range', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'age_range', language: 'ENGLISH', text: 'What is your age range?', promptProps: ['SINGLE_CHOICE'], answers: [
+      { id: 'q_age', type: 'questionnaire', position: { x: 400, y: 400 }, data: { label: 'Age Range', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'age_range', language: 'ENGLISH', text: 'What is your age range?', promptProps: ['SINGLE_CHOICE'], inputFormat: 'dropdown', answers: [
         { id: 'ans_u18', aIndex: 1, text: '0 - 17' },
         { id: 'ans_1825', aIndex: 2, text: '18 - 25' },
         { id: 'ans_2640', aIndex: 3, text: '26 - 40' },
       ] } },
-      { id: 'q_feedback', type: 'questionnaire', position: { x: 650, y: 620 }, data: { label: 'Service Rating', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'user_feedback', language: 'ENGLISH', text: 'Since you are an adult, how would you rate our service?', promptProps: ['SINGLE_CHOICE'], answers: [
+      { id: 'q_feedback', type: 'questionnaire', position: { x: 650, y: 620 }, data: { label: 'Service Rating', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, promptKey: 'user_feedback', language: 'ENGLISH', text: 'Since you are an adult, how would you rate our service?', promptProps: ['SINGLE_CHOICE'], inputFormat: 'radio', answers: [
         { id: 'ans_good', aIndex: 1, text: 'Good' },
         { id: 'ans_avg', aIndex: 2, text: 'Average' },
         { id: 'ans_bad', aIndex: 3, text: 'Bad' },

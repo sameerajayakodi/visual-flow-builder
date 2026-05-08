@@ -120,33 +120,7 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── COLLECT INPUT ───
-  {
-    nodeType: 'inputRequest',
-    requiredFields: ['prompt', 'variableName'],
-    sections: [
-      {
-        title: 'Input Settings',
-        icon: '📝',
-        fields: [
-          { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Ask the user for input...', rows: 2, required: true },
-          { key: 'variableName', label: 'Save to Variable', type: 'text', placeholder: 'user_name', required: true },
-          {
-            key: 'inputType', label: 'Input Type', type: 'select',
-            options: [
-              { label: 'Text', value: 'text' },
-              { label: 'Number', value: 'number' },
-              { label: 'Email', value: 'email' },
-              { label: 'Phone', value: 'phone' },
-              { label: 'Date', value: 'date' },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ─── QUESTIONNAIRE / SURVEY PROMPT ───
+  // ─── PROMPT (unified — replaces both Collect Input and Survey Prompt) ───
   {
     nodeType: 'questionnaire',
     requiredFields: ['text'],
@@ -156,7 +130,16 @@ const schemas: NodeConfigSchema[] = [
         icon: '📋',
         fields: [
           { key: 'text', label: 'Question Text', type: 'textarea', placeholder: 'Ask your question here...', rows: 3, required: true },
-          { key: 'promptKey', label: 'Prompt Key', type: 'text', placeholder: 'e.g. select_language', hint: 'Optional identifier for the backend.' },
+          {
+            key: 'promptProps', label: 'Prompt Type', type: 'select',
+            options: [
+              { label: 'Text Input', value: 'TEXT', description: 'User types free text' },
+              { label: 'Single Choice', value: 'SINGLE_CHOICE', description: 'Pick one answer' },
+              { label: 'Multi Choice', value: 'MULTI_CHOICE', description: 'Pick multiple answers' },
+              { label: 'Skippable', value: 'SKIPPABLE', description: 'User can skip' },
+              { label: 'Ending', value: 'ENDING', description: 'Final prompt (no outputs)' },
+            ],
+          },
           {
             key: 'language', label: 'Language', type: 'select',
             options: [
@@ -166,25 +149,51 @@ const schemas: NodeConfigSchema[] = [
               { label: 'HINDI', value: 'HINDI' },
             ],
           },
+          { key: 'promptKey', label: 'Prompt Key', type: 'text', placeholder: 'e.g. select_language', hint: 'Optional identifier for the backend.' },
+        ],
+      },
+      {
+        title: 'Text Input Settings',
+        icon: '📝',
+        fields: [
           {
-            key: 'promptProps', label: 'Prompt Type', type: 'select',
+            key: 'inputType', label: 'Input Validation', type: 'select',
+            showWhen: { field: 'promptProps', equals: 'TEXT' },
             options: [
-              { label: 'Text Input', value: 'TEXT', description: 'Free text response' },
-              { label: 'Single Choice', value: 'SINGLE_CHOICE', description: 'Pick one answer' },
-              { label: 'Multi Choice', value: 'MULTI_CHOICE', description: 'Pick multiple answers' },
-              { label: 'Skippable', value: 'SKIPPABLE', description: 'User can skip' },
-              { label: 'Ending', value: 'ENDING', description: 'Final prompt (no outputs)' },
+              { label: 'Any Text', value: 'text' },
+              { label: 'Number', value: 'number' },
+              { label: 'Email', value: 'email' },
+              { label: 'Phone', value: 'phone' },
+              { label: 'Date', value: 'date' },
             ],
+          },
+          {
+            key: 'variableName', label: 'Save to Variable', type: 'text',
+            placeholder: 'e.g. user_name, user_email',
+            hint: 'Store the user\'s response in this variable.',
+            showWhen: { field: 'promptProps', equals: 'TEXT' },
           },
         ],
       },
       {
-        title: 'Answers',
+        title: 'Answer Options',
         icon: '🔘',
         fields: [
           {
-            key: 'answers', label: 'Answer Options', type: 'answer-list', addLabel: '+ Add Answer',
-            hint: 'Each answer becomes an output handle you can connect to the next prompt.',
+            key: 'inputFormat', label: 'Display Format', type: 'select',
+            showWhen: { field: 'promptProps', equals: ['SINGLE_CHOICE', 'MULTI_CHOICE', 'SKIPPABLE'] },
+            options: [
+              { label: 'Buttons', value: 'button' },
+              { label: 'List Options', value: 'list' },
+              { label: 'Checkboxes', value: 'checkbox' },
+              { label: 'Radio Buttons', value: 'radio' },
+              { label: 'Dropdown', value: 'dropdown' },
+            ],
+          },
+          {
+            key: 'answers', label: 'Answers', type: 'answer-list', addLabel: '+ Add Answer',
+            hint: 'Each answer becomes an output handle you can connect to the next step.',
+            showWhen: { field: 'promptProps', equals: ['SINGLE_CHOICE', 'MULTI_CHOICE', 'SKIPPABLE'] },
             itemSchema: [
               { key: 'text', label: 'Answer Text', type: 'text', placeholder: 'e.g. English, Sinhala', required: true },
             ],

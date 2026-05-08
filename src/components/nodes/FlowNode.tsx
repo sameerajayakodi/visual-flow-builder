@@ -13,9 +13,10 @@ import type { FlowNodeData, NotesNodeData } from '../../types';
 function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] | null {
   const d = data as any;
 
-  // Questionnaire: answers → outputs (skip ENDING)
+  // Questionnaire (Prompt): answers → outputs
+  // TEXT mode = single output (like old Collect Input), ENDING = no output
   if (d.nodeType === 'questionnaire' && d.answers?.length > 0) {
-    if (d.promptProps?.includes('ENDING')) return null;
+    if (d.promptProps?.includes('ENDING') || d.promptProps?.includes('TEXT')) return null;
     return d.answers.map((a: any) => ({ id: a.id, label: a.text }));
   }
 
@@ -50,7 +51,6 @@ const AnswerHandlesBar: React.FC<{ outputs: { id: string; label: string }[] }> =
               position={Position.Bottom}
               className="flow-handle flow-handle--source flow-handle--answer"
               id={output.id}
-              style={{ position: 'relative', left: 0, bottom: 0, transform: 'none' }}
             />
           </div>
         );

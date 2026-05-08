@@ -45,8 +45,18 @@ function isFieldVisible(field: ConfigField, data: Record<string, any>): boolean 
   if (!field.showWhen) return true;
   const currentValue = getNestedValue(data, field.showWhen.field);
   const { equals } = field.showWhen;
+
+  const isCurrentArray = Array.isArray(currentValue);
+
   if (Array.isArray(equals)) {
+    if (isCurrentArray) {
+      return currentValue.some(val => equals.includes(val));
+    }
     return equals.includes(currentValue);
+  }
+
+  if (isCurrentArray) {
+    return currentValue.includes(equals);
   }
   return currentValue === equals;
 }
@@ -95,7 +105,10 @@ const FieldWidget: React.FC<{
         />
       );
 
-    case 'select':
+    case 'select': {
+      const isArrayValue = Array.isArray(value);
+      const currentSelectValue = isArrayValue ? (value[0] ?? '') : (value ?? '');
+
       return (
         <div className="config-field__select-wrap">
           {field.options && field.options.length <= 4 && field.options.every(o => o.icon) ? (
@@ -105,8 +118,8 @@ const FieldWidget: React.FC<{
                 <button
                   key={opt.value}
                   type="button"
-                  className={`config-field__option-card ${value === opt.value ? 'config-field__option-card--active' : ''}`}
-                  onClick={() => onChange(opt.value)}
+                  className={`config-field__option-card ${currentSelectValue === opt.value ? 'config-field__option-card--active' : ''}`}
+                  onClick={() => onChange(isArrayValue ? [opt.value] : opt.value)}
                 >
                   <span className="config-field__option-icon">{opt.icon}</span>
                   <span className="config-field__option-label">{opt.label}</span>
@@ -116,8 +129,8 @@ const FieldWidget: React.FC<{
           ) : (
             <select
               className="config-field__select"
-              value={value ?? field.defaultValue ?? ''}
-              onChange={(e) => onChange(e.target.value)}
+              value={currentSelectValue || field.defaultValue || ''}
+              onChange={(e) => onChange(isArrayValue ? [e.target.value] : e.target.value)}
             >
               {(field.options ?? []).map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -128,6 +141,7 @@ const FieldWidget: React.FC<{
           )}
         </div>
       );
+    }
 
     case 'checkbox':
       return (

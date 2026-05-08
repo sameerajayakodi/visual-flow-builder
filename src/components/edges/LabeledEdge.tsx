@@ -9,6 +9,7 @@ import {
   getSmoothStepPath,
   type EdgeProps,
 } from 'reactflow';
+import { useFlowStore } from '../../store';
 
 const LabeledEdge: React.FC<EdgeProps> = ({
   id,
@@ -22,7 +23,10 @@ const LabeledEdge: React.FC<EdgeProps> = ({
   markerEnd,
   label,
   data,
+  selected,
 }) => {
+  const deleteEdge = useFlowStore((s) => s.deleteEdge);
+
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -37,20 +41,37 @@ const LabeledEdge: React.FC<EdgeProps> = ({
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-      {displayLabel && (
-        <EdgeLabelRenderer>
-          <div
-            className="edge-label-pill"
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              pointerEvents: 'all',
-            }}
-          >
-            {displayLabel}
-          </div>
-        </EdgeLabelRenderer>
-      )}
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+            pointerEvents: 'all',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            zIndex: selected ? 20 : 10,
+          }}
+        >
+          {displayLabel && (
+            <div className="edge-label-pill">
+              {displayLabel}
+            </div>
+          )}
+          {selected && (
+            <button
+              className="edge-delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteEdge(id);
+              }}
+              title="Remove connection"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };

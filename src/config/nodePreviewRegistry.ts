@@ -90,11 +90,4 @@ export const nodePreviewRegistry: Record<string, NodePreviewConfig> = {
       { label: 'Title', valueKey: 'title', fallback: '-' },
     ],
   },
-  inputRequest: {
-    type: 'stats',
-    stats: [
-      { label: 'Type', valueKey: 'inputType', fallback: 'text' },
-      { label: 'Save as', valueKey: 'variableName', fallback: '-' },
-    ],
-  },
 };
