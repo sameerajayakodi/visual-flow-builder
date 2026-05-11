@@ -166,10 +166,11 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
         }));
 
       } else if (key === 'answers' && Array.isArray(value)) {
-        config.answers = (value as any[]).map((a, i) => ({
-          index: i + 1,
-          text: a.text,
-        }));
+        config.answers = (value as any[]).map((a, i) => {
+          const ans: any = { index: i + 1, text: a.text };
+          if (a.value) ans.value = a.value;
+          return ans;
+        });
 
       } else if (key === 'cases' && Array.isArray(value)) {
         config.cases = (value as any[]).map((c, i) => ({

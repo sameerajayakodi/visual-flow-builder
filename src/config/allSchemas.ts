@@ -171,7 +171,7 @@ const schemas: NodeConfigSchema[] = [
             key: 'variableName', label: 'Save to Variable', type: 'text',
             placeholder: 'e.g. user_name, user_email',
             hint: 'Store the user\'s response in this variable.',
-            showWhen: { field: 'promptProps', equals: 'TEXT' },
+            showWhen: { field: 'promptProps', equals: ['TEXT', 'SINGLE_CHOICE', 'MULTI_CHOICE', 'SKIPPABLE'] },
           },
         ],
       },
@@ -195,7 +195,8 @@ const schemas: NodeConfigSchema[] = [
             hint: 'Each answer becomes an output handle you can connect to the next step.',
             showWhen: { field: 'promptProps', equals: ['SINGLE_CHOICE', 'MULTI_CHOICE', 'SKIPPABLE'] },
             itemSchema: [
-              { key: 'text', label: 'Answer Text', type: 'text', placeholder: 'e.g. English, Sinhala', required: true },
+              { key: 'text', label: 'Display Text', type: 'text', placeholder: 'e.g. English, Sinhala', required: true },
+              { key: 'value', label: 'Backend Value', type: 'text', placeholder: 'Optional internal value', hint: 'If empty, display text is saved' },
             ],
           },
         ],

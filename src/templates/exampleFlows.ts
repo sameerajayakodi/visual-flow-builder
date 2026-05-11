@@ -180,7 +180,12 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
     status: 'draft',
     nodes: [
       { id: 't1', type: 'trigger', position: { x: 400, y: 50 }, data: { label: 'Start', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false } },
-      { id: 'sw1', type: 'condition', position: { x: 400, y: 200 }, data: { 
+      { id: 'ask_tier', type: 'questionnaire', position: { x: 400, y: 200 }, data: { 
+          label: 'Ask Tier', nodeType: 'questionnaire', category: 'message', icon: '📋', isConfigured: true, hasError: false, 
+          text: 'What is your current tier?', promptProps: ['TEXT'], inputType: 'text', variableName: 'user_tier', answers: [] 
+        } 
+      },
+      { id: 'sw1', type: 'condition', position: { x: 400, y: 350 }, data: { 
           label: 'Check Tier', nodeType: 'condition', category: 'logic', icon: '🔀', isConfigured: true, hasError: false, 
           conditionType: 'switch', 
           variable: 'user_tier', 
@@ -190,13 +195,15 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
           ]
         } 
       },
-      { id: 'msg_prem', type: 'text', position: { x: 100, y: 400 }, data: { label: 'Premium Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome to Premium features!' } },
-      { id: 'msg_std', type: 'text', position: { x: 400, y: 400 }, data: { label: 'Standard Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome back standard user.' } },
-      { id: 'msg_def', type: 'text', position: { x: 700, y: 400 }, data: { label: 'Default Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Please upgrade your account.' } },
-      { id: 'end1', type: 'end', position: { x: 400, y: 600 }, data: { label: 'End', nodeType: 'end', category: 'utility', icon: '🏁', isConfigured: true, hasError: false, endType: 'complete' } },
+      { id: 'msg_prem', type: 'text', position: { x: 100, y: 550 }, data: { label: 'Premium Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome to Premium features!' } },
+      { id: 'msg_std', type: 'text', position: { x: 400, y: 550 }, data: { label: 'Standard Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome back standard user.' } },
+      { id: 'msg_def', type: 'text', position: { x: 700, y: 550 }, data: { label: 'Default Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Please upgrade your account.' } },
+      { id: 'end1', type: 'end', position: { x: 400, y: 750 }, data: { label: 'End', nodeType: 'end', category: 'utility', icon: '🏁', isConfigured: true, hasError: false, endType: 'complete' } },
+      { id: 'note1', type: 'notes', position: { x: 750, y: 50 }, data: { label: 'Try Auto-Fill', nodeType: 'notes', category: 'utility', icon: '📝', isConfigured: true, hasError: false, content: 'If you delete the connection from Ask Tier and draw it again, the Condition node automatically detects "user_tier"!', color: '#fef08a' } },
     ],
     edges: [
-      { id: 'e1', source: 't1', target: 'sw1', type: 'smoothstep', animated: true },
+      { id: 'e1', source: 't1', target: 'ask_tier', type: 'smoothstep', animated: true },
+      { id: 'e2', source: 'ask_tier', target: 'sw1', type: 'smoothstep', animated: true },
       { id: 'e_prem', source: 'sw1', sourceHandle: 'case_prem', target: 'msg_prem', type: 'smoothstep', animated: true },
       { id: 'e_std', source: 'sw1', sourceHandle: 'case_std', target: 'msg_std', type: 'smoothstep', animated: true },
       { id: 'e_def', source: 'sw1', sourceHandle: 'default', target: 'msg_def', type: 'smoothstep', animated: true },

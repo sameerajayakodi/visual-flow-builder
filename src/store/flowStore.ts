@@ -372,7 +372,43 @@ export const useFlowStore = create<FlowState>()(
         data: edgeLabel ? { sourceAnswerLabel: edgeLabel } : undefined,
       };
 
+      // ─── Auto-fill Condition/Switch variables ───
+      let updatedNodes = state.nodes;
+      const targetNode = state.nodes.find(n => n.id === connection.target);
+      if (sourceNode && targetNode && targetNode.type === 'condition') {
+        const sData = sourceNode.data as any;
+        // Check standard variable keys used in various nodes
+        const savedVar = sData.variableName || sData.responseVariable || sData.saveToVariable;
+        
+        if (savedVar) {
+          const tData = { ...targetNode.data } as any;
+          let changed = false;
+          
+          if (tData.conditionType === 'switch') {
+            if (!tData.variable) {
+              tData.variable = savedVar;
+              changed = true;
+            }
+          } else {
+            if (!tData.rules || tData.rules.length === 0) {
+              tData.rules = [{ id: `rule_${uuidv4().slice(0, 6)}`, field: savedVar, operator: 'equals', value: '' }];
+              changed = true;
+            } else if (!tData.rules[0].field) {
+              tData.rules[0].field = savedVar;
+              changed = true;
+            }
+          }
+          
+          if (changed) {
+            updatedNodes = state.nodes.map(n => 
+              n.id === targetNode.id ? { ...n, data: tData } : n
+            );
+          }
+        }
+      }
+
       set({
+        nodes: updatedNodes,
         edges: rfAddEdge(newEdge, cleanedEdges),
         isDirty: true,
       });
