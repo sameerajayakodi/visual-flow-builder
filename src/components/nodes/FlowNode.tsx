@@ -19,10 +19,6 @@ function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] 
     return d.answers.map((a: any, i: number) => ({ id: a.id || `ans_${i}`, label: a.text }));
   }
 
-  // Button node: each button → output
-  if (d.nodeType === 'button' && d.buttons?.length > 0) {
-    return d.buttons.map((b: any) => ({ id: b.id, label: b.label }));
-  }
 
   // Card node: each button → output
   if (d.nodeType === 'card' && d.buttons?.length > 0) {

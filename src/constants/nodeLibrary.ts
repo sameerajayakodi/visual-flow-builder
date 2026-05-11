@@ -46,27 +46,7 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       variables: [],
     } as any,
   },
-  {
-    type: 'button',
-    label: 'Button Choice',
-    description: 'Show buttons — each connects to a different path',
-    category: 'message',
-    icon: '🔘',
-    color: '#8b5cf6',
-    defaultData: {
-      label: 'Button Choice',
-      nodeType: 'button',
-      category: 'message',
-      icon: '🔘',
-      isConfigured: false,
-      hasError: false,
-      message: 'Please choose:',
-      buttons: [
-        { id: 'btn_1', label: 'Option 1' },
-        { id: 'btn_2', label: 'Option 2' },
-      ],
-    } as any,
-  },
+
   {
     type: 'card',
     label: 'Card',
@@ -91,7 +71,7 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
   },
   {
     type: 'questionnaire',
-    label: 'Prompt',
+    label: 'Selection',
     description: 'Ask questions — text input, single/multi choice, or branching answers',
     category: 'message',
     icon: '📋',

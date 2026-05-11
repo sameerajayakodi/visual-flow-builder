@@ -63,31 +63,6 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── BUTTON CHOICE ───
-  {
-    nodeType: 'button',
-    requiredFields: ['message', 'buttons'],
-    sections: [
-      {
-        title: 'Button Options',
-        icon: '🔘',
-        fields: [
-          {
-            key: 'message', label: 'Question / Message', type: 'textarea',
-            placeholder: 'Please choose an option:', rows: 2, required: true,
-          },
-          {
-            key: 'buttons', label: 'Buttons', type: 'button-list',
-            addLabel: '+ Add Button', maxItems: 10,
-            itemSchema: [
-              { key: 'label', label: 'Label', type: 'text', placeholder: 'Button label', required: true },
-            ],
-          },
-        ],
-      },
-    ],
-    tips: [{ icon: '💡', text: 'Each button creates a separate output. Connect each one to the next step — no condition node needed!' }],
-  },
 
   // ─── CARD ───
   {

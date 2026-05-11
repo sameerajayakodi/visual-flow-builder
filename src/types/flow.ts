@@ -68,17 +68,6 @@ export interface TextNodeData extends BaseNodeData {
   };
 }
 
-export interface ButtonNodeData extends BaseNodeData {
-  nodeType: 'button';
-  message: string;
-  buttons: Array<{
-    id: string;
-    label: string;
-    value: string;
-    type: 'reply' | 'url' | 'action';
-  }>;
-}
-
 export interface MediaNodeData extends BaseNodeData {
   nodeType: 'media';
   mediaType: 'image' | 'video' | 'audio' | 'file';
@@ -283,7 +272,6 @@ export interface QuestionnaireNodeData extends BaseNodeData {
 export type FlowNodeData =
   | TriggerNodeData
   | TextNodeData
-  | ButtonNodeData
   | MediaNodeData
   | CardNodeData
   | CarouselNodeData
