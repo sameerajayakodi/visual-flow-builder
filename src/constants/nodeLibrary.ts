@@ -116,8 +116,8 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
   // ─── Logic Nodes (kept for advanced users) ───
   {
     type: 'condition',
-    label: 'Condition',
-    description: 'Branch based on rules (Yes/No)',
+    label: 'Condition / Switch',
+    description: 'Branch based on rules or variable values',
     category: 'logic',
     icon: '🔀',
     color: '#f59e0b',
@@ -128,6 +128,9 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       icon: '🔀',
       isConfigured: false,
       hasError: false,
+      conditionType: 'rules',
+      variable: '',
+      cases: [],
       combinator: 'and',
       rules: [],
     } as any,

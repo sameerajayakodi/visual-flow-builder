@@ -203,17 +203,30 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
-  // ─── CONDITION (for advanced users) ───
+  // ─── CONDITION / SWITCH (unified) ───
   {
     nodeType: 'condition',
-    requiredFields: ['rules'],
     sections: [
       {
-        title: 'Condition Rules',
+        title: 'Branching Type',
         icon: '🔀',
         fields: [
           {
+            key: 'conditionType', label: 'Evaluation Mode', type: 'select',
+            options: [
+              { label: 'Rule-based (Yes/No)', value: 'rules', description: 'Evaluate rules to a Yes/No outcome' },
+              { label: 'Switch Cases', value: 'switch', description: 'Check a variable against multiple values' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Condition Rules',
+        icon: '📋',
+        fields: [
+          {
             key: 'combinator', label: 'Combine Rules', type: 'select',
+            showWhen: { field: 'conditionType', equals: 'rules' },
             options: [
               { label: 'All rules match (AND)', value: 'and' },
               { label: 'Any rule matches (OR)', value: 'or' },
@@ -221,6 +234,7 @@ const schemas: NodeConfigSchema[] = [
           },
           {
             key: 'rules', label: 'Rules', type: 'rule-list', addLabel: '+ Add Rule',
+            showWhen: { field: 'conditionType', equals: 'rules' },
             itemSchema: [
               { key: 'field', label: 'Field', type: 'text', placeholder: 'variable_name' },
               {
@@ -239,8 +253,27 @@ const schemas: NodeConfigSchema[] = [
           },
         ],
       },
+      {
+        title: 'Switch Configuration',
+        icon: '🔀',
+        fields: [
+          {
+            key: 'variable', label: 'Variable to Check', type: 'text',
+            placeholder: 'e.g. user_type',
+            showWhen: { field: 'conditionType', equals: 'switch' },
+          },
+          {
+            key: 'cases', label: 'Cases', type: 'case-list', addLabel: '+ Add Case',
+            showWhen: { field: 'conditionType', equals: 'switch' },
+            itemSchema: [
+              { key: 'label', label: 'Label', type: 'text', placeholder: 'Path Label' },
+              { key: 'value', label: 'Value', type: 'text', placeholder: 'Match Value' },
+            ],
+          },
+        ],
+      },
     ],
-    tips: [{ icon: '💡', text: 'For simple routing, use Button Choice instead — no condition needed!' }],
+    tips: [{ icon: '💡', text: 'You can now use a single Condition node to build complex rule checks or multi-branch switch statements!' }],
   },
 
   // ─── DELAY ───

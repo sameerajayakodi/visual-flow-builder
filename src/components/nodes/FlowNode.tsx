@@ -30,6 +30,13 @@ function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] 
     return d.buttons.map((b: any) => ({ id: b.id, label: b.label }));
   }
 
+  // Condition node (switch mode): each case -> output + default -> output
+  if (d.nodeType === 'condition' && d.conditionType === 'switch' && d.cases?.length > 0) {
+    const outputs = d.cases.map((c: any) => ({ id: c.id, label: c.label || c.value }));
+    outputs.push({ id: 'default', label: 'Default' });
+    return outputs;
+  }
+
   return null;
 }
 
@@ -107,6 +114,14 @@ const FallbackPreview: React.FC<{ data: FlowNodeData }> = ({ data }) => {
       );
     }
     case 'condition': {
+      if ((data as any).conditionType === 'switch') {
+        const variable = (data as any).variable || 'Unknown Variable';
+        return (
+          <div className="flow-node__preview">
+            Check: {variable}
+          </div>
+        );
+      }
       const rules = (data as any).rules ?? [];
       const combinator = String((data as any).combinator ?? 'and');
       return (
@@ -137,7 +152,7 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
   const isEnd = data.nodeType === 'end';
   const isTrigger = data.nodeType === 'trigger';
   const isNotes = data.nodeType === 'notes';
-  const isCondition = data.nodeType === 'condition';
+  const isConditionRules = data.nodeType === 'condition' && (data as any).conditionType !== 'switch';
   const showConfigStatus = !isNotes && !isTrigger && !isEnd;
 
   const statusTone = data.hasError ? 'error' : (showConfigStatus && !data.isConfigured) ? 'warn' : 'ready';
@@ -159,7 +174,7 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
   return (
     <div
       onClick={handleClick}
-      className={`flow-node flow-node--wide ${selected ? 'flow-node--selected' : ''} ${data.hasError ? 'flow-node--error' : ''} ${isNotes ? 'flow-node--notes' : ''} ${isCondition ? 'flow-node--condition' : ''} ${hasDynamic ? 'flow-node--has-outputs' : ''}`}
+      className={`flow-node flow-node--wide ${selected ? 'flow-node--selected' : ''} ${data.hasError ? 'flow-node--error' : ''} ${isNotes ? 'flow-node--notes' : ''} ${isConditionRules ? 'flow-node--condition' : ''} ${hasDynamic ? 'flow-node--has-outputs' : ''}`}
       style={{
         '--node-color': color,
         '--node-color-light': color + '18',
@@ -212,12 +227,12 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
       {hasDynamic && <AnswerHandlesBar outputs={dynamicOutputs!} />}
 
       {/* Single output handle for non-choice nodes */}
-      {!isEnd && !hasDynamic && !isCondition && !isEnding && (
+      {!isEnd && !hasDynamic && !isConditionRules && !isEnding && (
         <Handle type="source" position={Position.Bottom} className="flow-handle flow-handle--source" id="source" />
       )}
 
       {/* Condition: Yes/No handles */}
-      {isCondition && (
+      {isConditionRules && (
         <>
           <Handle type="source" position={Position.Bottom} className="flow-handle flow-handle--source flow-handle--yes" id="yes" style={{ left: '30%' }} />
           <Handle type="source" position={Position.Bottom} className="flow-handle flow-handle--source flow-handle--no" id="no" style={{ left: '70%' }} />

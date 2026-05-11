@@ -45,6 +45,13 @@ export const nodePreviewRegistry: Record<string, NodePreviewConfig> = {
     type: 'condition',
     previewClass: 'flow-node__preview--condition',
   },
+  switch: {
+    type: 'stats',
+    stats: [
+      { label: 'Variable', valueKey: 'variable', fallback: 'Not set' },
+      { label: 'Cases', valueKey: 'cases.length', fallback: '0' },
+    ],
+  },
   delay: {
     type: 'stats',
     previewClass: 'flow-node__preview--delay',

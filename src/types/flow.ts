@@ -141,24 +141,20 @@ export interface FormNodeData extends BaseNodeData {
 
 export interface ConditionNodeData extends BaseNodeData {
   nodeType: 'condition';
-  rules: Array<{
+  conditionType?: 'rules' | 'switch';
+  variable?: string;
+  cases?: Array<{
+    id: string;
+    value: string;
+    label: string;
+  }>;
+  rules?: Array<{
     id: string;
     field: string;
     operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'exists' | 'notExists';
     value: string;
   }>;
-  combinator: 'and' | 'or';
-}
-
-export interface SwitchNodeData extends BaseNodeData {
-  nodeType: 'switch';
-  variable: string;
-  cases: Array<{
-    id: string;
-    value: string;
-    label: string;
-  }>;
-  defaultCaseLabel?: string;
+  combinator?: 'and' | 'or';
 }
 
 export interface DelayNodeData extends BaseNodeData {
@@ -293,7 +289,6 @@ export type FlowNodeData =
   | CarouselNodeData
   | FormNodeData
   | ConditionNodeData
-  | SwitchNodeData
   | DelayNodeData
   | RandomSplitNodeData
   | LoopNodeData

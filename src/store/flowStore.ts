@@ -174,6 +174,9 @@ export const useFlowStore = create<FlowState>()(
       if (d.answers) {
         d.answers = d.answers.map((a: any) => ({ ...a, id: `ans_${uuidv4().slice(0, 6)}` }));
       }
+      if (d.cases) {
+        d.cases = d.cases.map((c: any) => ({ ...c, id: `case_${uuidv4().slice(0, 6)}` }));
+      }
 
       const newNode: FlowNode = {
         id: nodeId,

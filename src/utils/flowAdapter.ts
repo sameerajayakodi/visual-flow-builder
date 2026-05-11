@@ -226,18 +226,18 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
         } else if (d.buttons?.length && edge.sourceHandle) {
           const idx = d.buttons.findIndex((b: any) => b.id === edge.sourceHandle);
           if (idx >= 0) routeIndex = idx + 1;
-        } else if (d.cases?.length && edge.sourceHandle) {
+        } else if (d.cases?.length && edge.sourceHandle && edge.sourceHandle !== 'default') {
           const idx = d.cases.findIndex((c: any) => c.id === edge.sourceHandle);
           if (idx >= 0) routeIndex = idx + 1;
-        } else if (d.nodeType === 'condition') {
+        } else if (edge.sourceHandle === 'default') {
+          routeIndex = 'default';
+        } else if (d.nodeType === 'condition' && d.conditionType !== 'switch') {
           // Condition: 1 = yes (true), 2 = no (false)
           routeIndex = edge.sourceHandle === 'yes' ? 1 : 2;
           // Ensure the config tells the backend what 1 and 2 mean
           if (!config.conditionMapping) {
             config.conditionMapping = { "1": "yes", "2": "no" };
           }
-        } else if (edge.sourceHandle === 'default') {
-          routeIndex = 'default';
         }
 
         const targetIndex = globalNodeIndexMap.get(edge.target);
