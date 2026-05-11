@@ -339,11 +339,11 @@ export interface FlowDocument {
   }>;
   // Steps export (ALL node types — generic routing map)
   steps?: Array<{
-    id: string;
+    id: number;
     type: string;
     name: string;
     config: Record<string, any>;
-    nextSteps: Record<string, string>;
+    nextSteps: Record<string, number>;
   }>;
   variables?: Record<string, FlowVariable>;
   metadata?: any;
