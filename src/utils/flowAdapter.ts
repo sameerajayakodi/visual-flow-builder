@@ -220,7 +220,7 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
         let routeIndex: number | string = 0;
 
         if (d.answers?.length && edge.sourceHandle) {
-          const idx = d.answers.findIndex((a: any) => a.id === edge.sourceHandle);
+          const idx = d.answers.findIndex((a: any, i: number) => (a.id || `ans_${i}`) === edge.sourceHandle);
           if (idx >= 0) {
             routeIndex = Number(d.answers[idx].aIndex) || (idx + 1);
           }

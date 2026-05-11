@@ -14,10 +14,9 @@ function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] 
   const d = data as any;
 
   // Questionnaire (Prompt): answers → outputs
-  // TEXT mode = single output (like old Collect Input), ENDING = no output
   if (d.nodeType === 'questionnaire' && d.answers?.length > 0) {
     if (d.promptProps?.includes('ENDING') || d.promptProps?.includes('TEXT')) return null;
-    return d.answers.map((a: any) => ({ id: a.id, label: a.text }));
+    return d.answers.map((a: any, i: number) => ({ id: a.id || `ans_${i}`, label: a.text }));
   }
 
   // Button node: each button → output

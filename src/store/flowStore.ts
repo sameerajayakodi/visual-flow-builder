@@ -337,7 +337,7 @@ export const useFlowStore = create<FlowState>()(
         const d = sourceNode.data as any;
         // Questionnaire answers
         if (d.answers?.length) {
-          const match = d.answers.find((a: any) => a.id === connection.sourceHandle);
+          const match = d.answers.find((a: any, i: number) => (a.id || `ans_${i}`) === connection.sourceHandle);
           if (match) edgeLabel = match.text;
         }
         // Button node
