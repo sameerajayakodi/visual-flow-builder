@@ -169,4 +169,42 @@ export const EXAMPLE_FLOWS: Record<string, any> = {
     variables: {},
     metadata: { description: 'Full order pipeline: API check → condition → email → delay → notification → card rating.' },
   },
+
+  // ══════════════════════════════════════════════
+  // 5. SWITCH USECASE — condition (switch mode)
+  // ══════════════════════════════════════════════
+  switch_usecase: {
+    flowId: 'switch-usecase',
+    name: 'User Tier Routing (Switch Case)',
+    version: 1,
+    status: 'draft',
+    nodes: [
+      { id: 't1', type: 'trigger', position: { x: 400, y: 50 }, data: { label: 'Start', nodeType: 'trigger', category: 'trigger', icon: '⚡', isConfigured: true, hasError: false } },
+      { id: 'sw1', type: 'condition', position: { x: 400, y: 200 }, data: { 
+          label: 'Check Tier', nodeType: 'condition', category: 'logic', icon: '🔀', isConfigured: true, hasError: false, 
+          conditionType: 'switch', 
+          variable: 'user_tier', 
+          cases: [
+            { id: 'case_prem', value: 'premium', label: 'Premium' },
+            { id: 'case_std', value: 'standard', label: 'Standard' }
+          ]
+        } 
+      },
+      { id: 'msg_prem', type: 'text', position: { x: 100, y: 400 }, data: { label: 'Premium Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome to Premium features!' } },
+      { id: 'msg_std', type: 'text', position: { x: 400, y: 400 }, data: { label: 'Standard Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Welcome back standard user.' } },
+      { id: 'msg_def', type: 'text', position: { x: 700, y: 400 }, data: { label: 'Default Msg', nodeType: 'text', category: 'message', icon: '💬', isConfigured: true, hasError: false, message: 'Please upgrade your account.' } },
+      { id: 'end1', type: 'end', position: { x: 400, y: 600 }, data: { label: 'End', nodeType: 'end', category: 'utility', icon: '🏁', isConfigured: true, hasError: false, endType: 'complete' } },
+    ],
+    edges: [
+      { id: 'e1', source: 't1', target: 'sw1', type: 'smoothstep', animated: true },
+      { id: 'e_prem', source: 'sw1', sourceHandle: 'case_prem', target: 'msg_prem', type: 'smoothstep', animated: true },
+      { id: 'e_std', source: 'sw1', sourceHandle: 'case_std', target: 'msg_std', type: 'smoothstep', animated: true },
+      { id: 'e_def', source: 'sw1', sourceHandle: 'default', target: 'msg_def', type: 'smoothstep', animated: true },
+      { id: 'e_end1', source: 'msg_prem', target: 'end1', type: 'smoothstep', animated: true },
+      { id: 'e_end2', source: 'msg_std', target: 'end1', type: 'smoothstep', animated: true },
+      { id: 'e_end3', source: 'msg_def', target: 'end1', type: 'smoothstep', animated: true },
+    ],
+    variables: {},
+    metadata: { description: 'Demonstrates routing using a Condition node in Switch mode.' },
+  },
 };
