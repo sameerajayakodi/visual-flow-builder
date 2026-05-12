@@ -100,6 +100,7 @@ interface FlowState {
   // ─── Actions: Variables ───
   addVariable: (variable: FlowVariable) => void;
   removeVariable: (name: string) => void;
+  getAncestorVariables: (nodeId: string) => string[];
 }
 
 // ─── Default trigger node for new flows ───
@@ -376,10 +377,10 @@ export const useFlowStore = create<FlowState>()(
         data: edgeLabel ? { sourceAnswerLabel: edgeLabel } : undefined,
       };
 
-      // ─── Auto-fill Condition/Switch variables ───
+      // ─── Auto-fill Condition/Switch variables or Text placeholders ───
       let updatedNodes = state.nodes;
       const targetNode = state.nodes.find(n => n.id === connection.target);
-      if (sourceNode && targetNode && targetNode.type === 'condition') {
+      if (sourceNode && targetNode) {
         const sData = sourceNode.data as any;
         // Check standard variable keys used in various nodes
         const savedVar = sData.variableName || sData.responseVariable || sData.saveToVariable;
@@ -388,17 +389,26 @@ export const useFlowStore = create<FlowState>()(
           const tData = { ...targetNode.data } as any;
           let changed = false;
           
-          if (tData.conditionType === 'switch') {
-            if (!tData.variable) {
-              tData.variable = savedVar;
-              changed = true;
+          if (targetNode.type === 'condition') {
+            if (tData.conditionType === 'switch') {
+              if (!tData.variable) {
+                tData.variable = savedVar;
+                changed = true;
+              }
+            } else {
+              if (!tData.rules || tData.rules.length === 0) {
+                tData.rules = [{ id: `rule_${uuidv4().slice(0, 6)}`, field: savedVar, operator: 'equals', value: '' }];
+                changed = true;
+              } else if (!tData.rules[0].field) {
+                tData.rules[0].field = savedVar;
+                changed = true;
+              }
             }
-          } else {
-            if (!tData.rules || tData.rules.length === 0) {
-              tData.rules = [{ id: `rule_${uuidv4().slice(0, 6)}`, field: savedVar, operator: 'equals', value: '' }];
-              changed = true;
-            } else if (!tData.rules[0].field) {
-              tData.rules[0].field = savedVar;
+          } else if (targetNode.type === 'text' || targetNode.type === 'questionnaire' || targetNode.type === 'getInput') {
+            const textField = targetNode.type === 'questionnaire' ? 'text' : 'message';
+            if (!tData[textField] || tData[textField].trim() === '') {
+              const prefix = targetNode.type === 'text' ? 'Here is the ' : 'Please provide the ';
+              tData[textField] = `${prefix}{{${savedVar}}}`;
               changed = true;
             }
           }
@@ -748,6 +758,34 @@ export const useFlowStore = create<FlowState>()(
         delete newVars[name];
         return { variables: newVars, isDirty: true };
       });
+    },
+
+    getAncestorVariables: (nodeId: string) => {
+      const state = get();
+      const variables = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [nodeId];
+
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+
+        const incomingEdges = state.edges.filter(e => e.target === currentId);
+        incomingEdges.forEach(edge => {
+          const sourceNode = state.nodes.find(n => n.id === edge.source);
+          if (sourceNode) {
+            const d = sourceNode.data as any;
+            const v = d.variableName || d.responseVariable || d.saveToVariable;
+            if (v && typeof v === 'string') {
+              variables.add(v);
+            }
+            queue.push(sourceNode.id);
+          }
+        });
+      }
+
+      return Array.from(variables);
     },
   }))
 );

@@ -2,7 +2,7 @@
 // Slim shell that delegates to ConfigRenderer for schema-driven config.
 // Replaces the original 2,063-line monolith.
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { getNodeColor } from '../../constants';
 import { getNodeSchema } from '../../config';
 import { useFlowStore } from '../../store';
@@ -20,9 +20,15 @@ const ConfigPanel: React.FC = () => {
   const duplicateNode = useFlowStore((s) => s.duplicateNode);
   const rightPanelCollapsed = useFlowStore((s) => s.rightPanelCollapsed);
   const toggleRightPanel = useFlowStore((s) => s.toggleRightPanel);
+  const getAncestorVariables = useFlowStore((s) => s.getAncestorVariables);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
+
+  const availableVariables = useMemo(() => {
+    if (!selectedNodeId) return [];
+    return getAncestorVariables(selectedNodeId);
+  }, [selectedNodeId, getAncestorVariables, nodes, edges]);
 
   const handleUpdate = useCallback(
     (field: string, value: any) => {
@@ -143,6 +149,7 @@ const ConfigPanel: React.FC = () => {
             schema={schema}
             data={selectedNode.data as any}
             onUpdate={handleUpdate}
+            availableVariables={availableVariables}
           />
         ) : (
           <div className="config-panel__placeholder">

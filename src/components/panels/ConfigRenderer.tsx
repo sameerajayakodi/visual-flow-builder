@@ -9,6 +9,7 @@ interface ConfigRendererProps {
   schema: NodeConfigSchema;
   data: Record<string, any>;
   onUpdate: (field: string, value: any) => void;
+  availableVariables?: string[];
 }
 
 // ─── Resolve nested values like "config.keyword" ───
@@ -61,6 +62,185 @@ function isFieldVisible(field: ConfigField, data: Record<string, any>): boolean 
   return currentValue === equals;
 }
 
+// ─── Rich Text Input (with Variable Chips) ───
+const RichTextInput: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  availableVariables: string[];
+  placeholder?: string;
+  multiline?: boolean;
+}> = ({ value, onChange, availableVariables, placeholder, multiline }) => {
+  const editorRef = React.useRef<HTMLDivElement>(null);
+  const [showVarPicker, setShowVarPicker] = React.useState(false);
+  const lastEmittedValue = React.useRef(value);
+  
+  const formatValueToHtml = (text: string) => {
+    if (!text) return '';
+    let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let html = escaped.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+      return `<span contenteditable="false" class="var-chip" style="display:inline-block; background:rgba(16, 185, 129, 0.15); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:4px; padding:1px 5px; font-size:10px; font-weight:700; margin:0 2px; user-select:none; vertical-align:middle; cursor:default;">${varName}</span>`;
+    });
+    if (multiline) {
+      html = html.replace(/\n/g, '<br>');
+    }
+    return html;
+  };
+
+  const parseHtmlToValue = (element: HTMLElement) => {
+    let result = '';
+    for (const node of Array.from(element.childNodes)) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        result += (node.textContent || '').replace(/\u00A0/g, ' ');
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        if (el.classList.contains('var-chip')) {
+          result += `{{${el.textContent}}}`;
+        } else if (el.tagName === 'BR') {
+          result += '\n';
+        } else if (el.tagName === 'DIV' || el.tagName === 'P') {
+          result += (result.length > 0 && !result.endsWith('\n') ? '\n' : '') + parseHtmlToValue(el);
+        } else {
+          result += parseHtmlToValue(el);
+        }
+      }
+    }
+    return result;
+  };
+
+  React.useEffect(() => {
+    if (value !== lastEmittedValue.current && editorRef.current) {
+      const currentHtmlValue = parseHtmlToValue(editorRef.current);
+      if (value !== currentHtmlValue) {
+        editorRef.current.innerHTML = formatValueToHtml(value);
+        lastEmittedValue.current = value;
+      }
+    }
+  }, [value, multiline]);
+
+  React.useEffect(() => {
+    if (editorRef.current && !editorRef.current.innerHTML && value) {
+      editorRef.current.innerHTML = formatValueToHtml(value);
+    }
+  }, []);
+
+  const handleInput = () => {
+    if (!editorRef.current) return;
+    const newVal = parseHtmlToValue(editorRef.current);
+    lastEmittedValue.current = newVal;
+    onChange(newVal);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!multiline && e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
+  const insertVariable = (varName: string) => {
+    setShowVarPicker(false);
+    if (!editorRef.current) return;
+    
+    editorRef.current.focus();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        range.deleteContents();
+        const chip = document.createElement('span');
+        chip.contentEditable = 'false';
+        chip.className = 'var-chip';
+        chip.style.cssText = 'display:inline-block; background:rgba(16, 185, 129, 0.15); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:4px; padding:1px 5px; font-size:10px; font-weight:700; margin:0 2px; user-select:none; vertical-align:middle; cursor:default;';
+        chip.textContent = varName;
+        
+        range.insertNode(chip);
+        
+        range.setStartAfter(chip);
+        range.setEndAfter(chip);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        editorRef.current.innerHTML += formatValueToHtml(`{{${varName}}}`);
+        // move cursor to end
+        const newSel = window.getSelection();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(editorRef.current);
+        newRange.collapse(false);
+        newSel?.removeAllRanges();
+        newSel?.addRange(newRange);
+      }
+    } else {
+       editorRef.current.innerHTML += formatValueToHtml(`{{${varName}}}`);
+    }
+    
+    handleInput();
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInput}
+        onBlur={handleInput}
+        onPaste={handlePaste}
+        onKeyDown={handleKeyDown}
+        className={multiline ? "config-field__textarea" : "config-field__input"}
+        style={{
+           minHeight: multiline ? '80px' : '34px',
+           height: multiline ? 'auto' : '34px',
+           overflowY: 'auto',
+           display: 'block',
+           whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
+           overflowX: multiline ? 'hidden' : 'auto',
+           paddingBottom: '24px',
+           outline: 'none'
+        }}
+      />
+      {!value && placeholder && (
+        <span style={{ position: 'absolute', top: '9px', left: '12px', color: 'var(--text-muted)', pointerEvents: 'none', fontSize: '13px' }}>
+          {placeholder}
+        </span>
+      )}
+      {availableVariables.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowVarPicker(!showVarPicker)}
+          title="Insert Variable"
+          style={{ position: 'absolute', right: 4, bottom: 4, fontSize: '10px', padding: '2px 4px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', color: 'var(--text-secondary)', zIndex: 10 }}
+        >
+          {'{ }'}
+        </button>
+      )}
+      {showVarPicker && (
+        <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', minWidth: '120px', maxHeight: '150px', overflowY: 'auto', marginTop: '2px' }}>
+          {availableVariables.map(v => (
+            <button
+              key={v}
+              type="button"
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '4px' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              onClick={(e) => {
+                e.preventDefault();
+                insertVariable(v);
+              }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Field Renderers ───
 const FieldWidget: React.FC<{
   field: ConfigField;
@@ -68,27 +248,28 @@ const FieldWidget: React.FC<{
   onChange: (value: any) => void;
   data: Record<string, any>;
   onUpdate: (field: string, value: any) => void;
-}> = ({ field, value, onChange, data, onUpdate }) => {
+  availableVariables: string[];
+}> = ({ field, value, onChange, data, onUpdate, availableVariables }) => {
   switch (field.type) {
     case 'text':
       return (
-        <input
-          type="text"
-          className="config-field__input"
+        <RichTextInput
           value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
+          availableVariables={availableVariables}
           placeholder={field.placeholder}
+          multiline={false}
         />
       );
 
     case 'textarea':
       return (
-        <textarea
-          className="config-field__textarea"
+        <RichTextInput
           value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
+          availableVariables={availableVariables}
           placeholder={field.placeholder}
-          rows={field.rows ?? 3}
+          multiline={true}
         />
       );
 
@@ -229,6 +410,7 @@ const FieldWidget: React.FC<{
           addLabel={field.addLabel ?? '+ Add Item'}
           maxItems={field.maxItems}
           listType={field.type}
+          availableVariables={availableVariables}
         />
       );
 
@@ -253,7 +435,8 @@ const ListWidget: React.FC<{
   addLabel: string;
   maxItems?: number;
   listType: string;
-}> = ({ items, onChange, itemSchema, addLabel, maxItems, listType }) => {
+  availableVariables: string[];
+}> = ({ items, onChange, itemSchema, addLabel, maxItems, listType, availableVariables }) => {
   const addItem = () => {
     if (maxItems && items.length >= maxItems) return;
     const newItem: Record<string, any> = { id: `item_${Date.now()}` };
@@ -360,6 +543,7 @@ const ListWidget: React.FC<{
                     onChange={(v) => updateItem(idx, fieldDef.key, v)}
                     data={item}
                     onUpdate={(k, v) => updateItem(idx, k, v)}
+                    availableVariables={availableVariables}
                   />
                 </div>
               ))}
@@ -378,6 +562,7 @@ const ListWidget: React.FC<{
                   onChange={(v) => updateItem(idx, fieldDef.key, v)}
                   data={item}
                   onUpdate={(k, v) => updateItem(idx, k, v)}
+                  availableVariables={availableVariables}
                 />
               ))}
               {listType === 'branch-list' && (
@@ -407,7 +592,8 @@ const SectionRenderer: React.FC<{
   section: ConfigSection;
   data: Record<string, any>;
   onUpdate: (field: string, value: any) => void;
-}> = ({ section, data, onUpdate }) => {
+  availableVariables: string[];
+}> = ({ section, data, onUpdate, availableVariables }) => {
   const [collapsed, setCollapsed] = React.useState(section.collapsed ?? section.advanced ?? false);
 
   const visibleFields = section.fields.filter((f) => isFieldVisible(f, data));
@@ -446,6 +632,7 @@ const SectionRenderer: React.FC<{
                     onChange={(v) => setNestedValue(data, field.key, v, onUpdate)}
                     data={data}
                     onUpdate={onUpdate}
+                    availableVariables={availableVariables}
                   />
                 </div>
               );
@@ -463,6 +650,7 @@ const SectionRenderer: React.FC<{
                   onChange={(v) => setNestedValue(data, field.key, v, onUpdate)}
                   data={data}
                   onUpdate={onUpdate}
+                  availableVariables={availableVariables}
                 />
                 {field.hint && <span className="config-field__hint">{field.hint}</span>}
               </div>
@@ -475,7 +663,7 @@ const SectionRenderer: React.FC<{
 };
 
 // ─── Main ConfigRenderer ───
-const ConfigRenderer: React.FC<ConfigRendererProps> = ({ schema, data, onUpdate }) => {
+const ConfigRenderer: React.FC<ConfigRendererProps> = ({ schema, data, onUpdate, availableVariables = [] }) => {
   return (
     <div className="config-renderer">
       {schema.sections.map((section, idx) => (
@@ -484,6 +672,7 @@ const ConfigRenderer: React.FC<ConfigRendererProps> = ({ schema, data, onUpdate 
           section={section}
           data={data}
           onUpdate={onUpdate}
+          availableVariables={availableVariables}
         />
       ))}
 
