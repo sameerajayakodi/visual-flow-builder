@@ -13,13 +13,12 @@ export type NodeCategory =
 export type FlowNodeType =
   | 'trigger'
   | 'text'
-  | 'button'
   | 'media'
+  | 'getInput'
   | 'card'
   | 'carousel'
   | 'form'
   | 'condition'
-  | 'switch'
   | 'delay'
   | 'randomSplit'
   | 'loop'
@@ -76,6 +75,15 @@ export interface MediaNodeData extends BaseNodeData {
   altText?: string;
   autoplay?: boolean;
   loop?: boolean;
+}
+
+export interface GetInputNodeData extends BaseNodeData {
+  nodeType: 'getInput';
+  message: string;
+  expectedInputType: 'image' | 'video' | 'audio' | 'file';
+  saveToVariable?: string;
+  skippable?: boolean;
+  errorMessage?: string;
 }
 
 export interface CardNodeData extends BaseNodeData {
@@ -273,6 +281,7 @@ export type FlowNodeData =
   | TriggerNodeData
   | TextNodeData
   | MediaNodeData
+  | GetInputNodeData
   | CardNodeData
   | CarouselNodeData
   | FormNodeData

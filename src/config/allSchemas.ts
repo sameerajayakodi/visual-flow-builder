@@ -63,6 +63,52 @@ const schemas: NodeConfigSchema[] = [
     ],
   },
 
+  // ─── GET MEDIA / FILE INPUT ───
+  {
+    nodeType: 'getInput',
+    requiredFields: ['message'],
+    sections: [
+      {
+        title: 'Input Settings',
+        icon: '📎',
+        fields: [
+          {
+            key: 'message', label: 'Message Prompt', type: 'textarea',
+            placeholder: 'e.g. Please upload your ID...', rows: 2, required: true,
+          },
+          {
+            key: 'expectedInputType', label: 'Allowed Media Type', type: 'select',
+            options: [
+              { label: 'Image', value: 'image' },
+              { label: 'Video', value: 'video' },
+              { label: 'Voice / Audio', value: 'audio' },
+              { label: 'Document / File', value: 'file' },
+            ],
+          },
+          {
+            key: 'saveToVariable', label: 'Save Media URL to Variable', type: 'text',
+            placeholder: 'e.g. user_id_photo',
+            hint: 'The uploaded file URL will be saved here.',
+          },
+        ],
+      },
+      {
+        title: 'Validation & Fallbacks',
+        icon: '🛡️',
+        fields: [
+          {
+            key: 'skippable', label: 'Allow User to Skip', type: 'checkbox',
+          },
+          {
+            key: 'errorMessage', label: 'Error Message (Invalid Format)', type: 'textarea',
+            placeholder: 'Invalid format. Please upload a valid file.', rows: 2,
+            hint: 'Message sent if the user uploads the wrong type or sends text instead.',
+          },
+        ],
+      },
+    ],
+  },
+
 
   // ─── CARD ───
   {
@@ -166,7 +212,7 @@ const schemas: NodeConfigSchema[] = [
             ],
           },
           {
-            key: 'answers', label: 'Answers', type: 'answer-list', addLabel: '+ Add Answer',
+            key: 'answers', label: 'Answers', type: 'answer-list', addLabel: '+ Add Answer', maxItems: 10,
             hint: 'Each answer becomes an output handle you can connect to the next step.',
             showWhen: { field: 'promptProps', equals: ['SINGLE_CHOICE', 'MULTI_CHOICE', 'SKIPPABLE'] },
             itemSchema: [
@@ -341,6 +387,56 @@ const schemas: NodeConfigSchema[] = [
         ],
       },
     ],
+  },
+
+  // ─── DATABASE SAVE ───
+  {
+    nodeType: 'dbSave',
+    requiredFields: ['collection'],
+    sections: [
+      {
+        title: 'Database',
+        icon: '🗄️',
+        fields: [
+          { key: 'collection', label: 'Collection / Table', type: 'text', placeholder: 'e.g. users, orders, leads', required: true, hint: 'The database collection or table name.' },
+          {
+            key: 'operation', label: 'Operation', type: 'select',
+            options: [
+              { label: 'Insert (Create New)', value: 'insert' },
+              { label: 'Update (Modify Existing)', value: 'update' },
+              { label: 'Upsert (Insert or Update)', value: 'upsert' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Field Mappings',
+        icon: '🔗',
+        fields: [
+          {
+            key: 'fields', label: 'Fields', type: 'rule-list', addLabel: '+ Add Field', maxItems: 20,
+            hint: 'Map variable names to database columns.',
+            itemSchema: [
+              { key: 'field', label: 'DB Column', type: 'text', placeholder: 'e.g. name, email' },
+              { key: 'value', label: 'Variable / Value', type: 'text', placeholder: 'e.g. {{user_name}}' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Update Condition',
+        icon: '🔍',
+        fields: [
+          {
+            key: 'condition', label: 'Where Condition', type: 'text',
+            placeholder: 'e.g. id = {{user_id}}',
+            hint: 'Required for update/upsert — identifies which record to modify.',
+            showWhen: { field: 'operation', equals: ['update', 'upsert'] },
+          },
+        ],
+      },
+    ],
+    tips: [{ icon: '💡', text: 'Use {{variable_name}} syntax to reference flow variables in field values and conditions.' }],
   },
 
   // ─── END ───

@@ -12,7 +12,7 @@ export interface StatPreview {
 }
 
 export interface NodePreviewConfig {
-  type: 'stats' | 'pills' | 'text' | 'condition' | 'custom';
+  type: 'stats' | 'pills' | 'text' | 'condition' | 'custom' | 'getInput';
   stats?: StatPreview[];
   pillsArrayKey?: string;
   pillsLabelKey?: string;
@@ -95,6 +95,16 @@ export const nodePreviewRegistry: Record<string, NodePreviewConfig> = {
     stats: [
       { label: 'Channel', valueKey: 'channel', fallback: 'push' },
       { label: 'Title', valueKey: 'title', fallback: '-' },
+    ],
+  },
+  getInput: {
+    type: 'getInput',
+  },
+  dbSave: {
+    type: 'stats',
+    stats: [
+      { label: 'Collection', valueKey: 'collection', fallback: 'Not set' },
+      { label: 'Operation', valueKey: 'operation', fallback: 'insert', format: (v: string) => v ? v.toUpperCase() : 'INSERT' },
     ],
   },
 };

@@ -13,10 +13,11 @@ import type { FlowNodeData, NotesNodeData } from '../../types';
 function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] | null {
   const d = data as any;
 
-  // Questionnaire (Prompt): answers → outputs
+  // Questionnaire (Prompt): answers → outputs (max 10)
   if (d.nodeType === 'questionnaire' && d.answers?.length > 0) {
     if (d.promptProps?.includes('ENDING') || d.promptProps?.includes('TEXT')) return null;
-    return d.answers.map((a: any, i: number) => ({ id: a.id || `ans_${i}`, label: a.text }));
+    const limited = d.answers.slice(0, 10);
+    return limited.map((a: any, i: number) => ({ id: a.id || `ans_${i}`, label: a.text }));
   }
 
 
@@ -40,12 +41,10 @@ const AnswerHandlesBar: React.FC<{ outputs: { id: string; label: string }[] }> =
   return (
     <div className="flow-node__answers-bar">
       {outputs.map((output, i) => {
-        const leftPercent = ((i + 1) * 100) / (outputs.length + 1);
         return (
           <div
             key={output.id}
             className="flow-node__answer-slot"
-            style={{ left: `${leftPercent}%` }}
           >
             <span className="flow-node__answer-label">{output.label}</span>
             <Handle
@@ -130,6 +129,56 @@ const FallbackPreview: React.FC<{ data: FlowNodeData }> = ({ data }) => {
             <span className="flow-node__branch flow-node__branch--yes">✓ Yes</span>
             <span className="flow-node__branch flow-node__branch--no">✗ No</span>
           </div>
+        </div>
+      );
+    }
+    case 'getInput': {
+      const type = (data as any).expectedInputType || 'image';
+      const msg = (data as any).message || '';
+      const variable = (data as any).saveToVariable || '';
+      const skippable = (data as any).skippable || false;
+      const icons: Record<string, string> = { image: '🖼️', video: '🎥', audio: '🎙️', file: '📄' };
+      return (
+        <div className="flow-node__preview flow-node__preview--get-input" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px 10px' }}>
+          {msg && (
+            <div className="flow-node__question-text" style={{ marginTop: 0, padding: '4px 8px', fontSize: '11px' }}>
+              "{msg}"
+            </div>
+          )}
+          
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'row', 
+            gap: '8px', 
+            background: 'var(--bg-card)', 
+            padding: '8px 12px', 
+            borderRadius: '6px',
+            border: '1px dashed var(--node-color)',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{ fontSize: '16px' }}>
+              {icons[type] || '📎'}
+            </div>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Expects {type}
+            </div>
+          </div>
+          
+          {(variable || skippable) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+              {variable && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
+                  <span>💾</span> {variable}
+                </div>
+              )}
+              {skippable && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
+                  <span>⏭️</span> Skip allowed
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }

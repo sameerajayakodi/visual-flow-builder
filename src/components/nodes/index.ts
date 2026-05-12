@@ -13,6 +13,8 @@ export const nodeTypes = {
   notification: FlowNode,
   end: FlowNode,
   notes: FlowNode,
+  getInput: FlowNode,
+  dbSave: FlowNode,
 };
 
 export { FlowNode };

@@ -357,38 +357,43 @@
 .flow-node__answers-bar {
   position: relative;
   width: 100%;
-  height: 42px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+  gap: 4px;
+  padding: 8px 6px 22px 6px;
   border-top: 1px solid var(--border);
   background: var(--bg-secondary);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 .flow-node__answer-slot {
-  position: absolute;
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  top: 4px;
+  flex-shrink: 0;
   z-index: 10;
   pointer-events: auto;
 }
 .flow-node__answer-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--node-color, var(--text-secondary));
   background: var(--bg-card);
   border: 1px solid var(--node-color-medium, var(--border));
-  padding: 1px 8px;
+  padding: 1px 6px;
   border-radius: 999px;
   white-space: nowrap;
-  max-width: 90px;
+  max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
 }
 .flow-node--has-outputs {
   padding-bottom: 0;
+  min-width: auto;
+  max-width: none;
+  width: auto;
 }
 .flow-node--has-outputs .flow-node__body {
   padding-bottom: 8px;
