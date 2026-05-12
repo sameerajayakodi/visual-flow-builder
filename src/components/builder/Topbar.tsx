@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFlowStore } from '../../store';
-import { EXAMPLE_FLOWS } from '../../templates/exampleFlows';
 
 
 const Topbar: React.FC = () => {
@@ -33,7 +32,6 @@ const Topbar: React.FC = () => {
   const [editName, setEditName] = useState(flowName);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -96,7 +94,7 @@ const Topbar: React.FC = () => {
       <div className="topbar__left">
         <div className="topbar__brand">
           <span className="topbar__logo">◈</span>
-          <span className="topbar__brand-name">FlowCraft</span>
+          <span className="topbar__brand-name">No-Code Flow Builder</span>
         </div>
 
         <div className="topbar__divider" />
@@ -206,51 +204,6 @@ const Topbar: React.FC = () => {
           </svg>
         </button>
 
-        <div className="topbar__divider" />
-
-        {/* Templates */}
-        <div className="topbar__menu-wrap">
-          <button
-            className={`topbar__btn topbar__btn--secondary ${showTemplates ? 'topbar__icon-btn--active' : ''}`}
-            onClick={() => setShowTemplates(!showTemplates)}
-          >
-            📚 Templates
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 4 }}>
-              <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          {showTemplates && (
-            <>
-              <div className="topbar__menu-overlay" onClick={() => setShowTemplates(false)} />
-              <div className="topbar__menu" style={{ left: 0, right: 'auto', minWidth: 260 }}>
-                <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Load Template
-                </div>
-                {Object.entries(EXAMPLE_FLOWS).map(([key, flow]) => (
-                  <button
-                    key={key}
-                    className="topbar__menu-item"
-                    onClick={() => {
-                      if (confirm(`Load "${flow.name}"? This will replace your current flow.`)) {
-                        localStorage.removeItem('flowcraft_current_flow');
-                        loadFlow(JSON.parse(JSON.stringify(flow)));
-                      }
-                      setShowTemplates(false);
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <span style={{ fontWeight: 600 }}>{flow.name}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'normal', textAlign: 'left', marginTop: 2 }}>
-                        {flow.metadata.description}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
       </div>
 
       {/* Right section */}

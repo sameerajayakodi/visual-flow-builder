@@ -52,10 +52,10 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
 
     // Embed all other config fields dynamically so nothing is lost
     const skipKeys = new Set([
-      'label', 'nodeType', 'category', 'icon', 
+      'nodeType', 'category', 'icon', 
       'isConfigured', 'hasError', 'errorMessage', 'description',
       'pIndex', 'aIndex', 'keyPattern', 'keyPatternHuman',
-      'promptProps', 'promptKey', 'text', 'message', 'language', 'answers', 'cases', 'buttons'
+      'promptProps', 'promptKey', 'text', 'message', 'language', 'answers', 'cases', 'buttons', 'variables'
     ]);
     
     for (const [k, v] of Object.entries(d)) {

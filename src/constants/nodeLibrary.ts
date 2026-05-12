@@ -43,7 +43,6 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
       isConfigured: false,
       hasError: false,
       message: '',
-      variables: [],
     } as any,
   },
   {
@@ -92,7 +91,7 @@ export const NODE_LIBRARY: NodeLibraryItem[] = [
   },
   {
     type: 'questionnaire',
-    label: 'Selection',
+    label: 'Questionnaire',
     description: 'Ask questions — text input, single/multi choice, or branching answers',
     category: 'message',
     icon: '📋',
