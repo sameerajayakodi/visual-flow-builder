@@ -77,6 +77,8 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
       prompt.prevPIndex = prevPIndices[0];
     } else if (prevPIndices.length > 1) {
       prompt.prevPIndex = prevPIndices;
+    } else {
+      prompt.prevPIndex = null;
     }
 
     if (d.nodeType === 'questionnaire' && !type.includes('TEXT') && !type.includes('ENDING')) {
@@ -98,8 +100,7 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
 
         return {
           aIndex,
-          keyPattern: String(aIndex),
-          keyPatternHuman: String(aIndex),
+          key: ans.value || null,
           text: ans.text,
           props: [inputFormat],
           nextPromptLanguage,
@@ -130,8 +131,7 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
 
               prompt.answers.push({
                 aIndex,
-                keyPattern: String(aIndex),
-                keyPatternHuman: String(aIndex),
+                key: ansText,
                 text: ansText,
                 props: ['ROUTE'],
                 nextPIndex,

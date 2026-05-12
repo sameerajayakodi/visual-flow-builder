@@ -154,6 +154,9 @@ export const useFlowStore = create<FlowState>()(
       const libraryItem = NODE_LIBRARY.find((n) => n.type === type);
       if (!libraryItem) return '';
 
+      const existingCount = state.nodes.filter(n => n.type === type).length;
+      const typeIndex = existingCount + 1;
+
       const nodeId = `${type}_${uuidv4().slice(0, 8)}`;
       const nodeData = JSON.parse(JSON.stringify({
           ...libraryItem.defaultData,
@@ -162,6 +165,7 @@ export const useFlowStore = create<FlowState>()(
           category: libraryItem.category,
           icon: libraryItem.icon,
           hasError: false,
+          promptKey: `${type}_${typeIndex}`,
         })) as FlowNodeData;
       // Auto-check configuration using schema
       (nodeData as any).isConfigured = isNodeConfigured(type, nodeData as any);

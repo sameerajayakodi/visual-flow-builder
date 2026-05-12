@@ -53,6 +53,7 @@ const schemas: NodeConfigSchema[] = [
         title: 'Message',
         icon: '💬',
         fields: [
+          { key: 'promptKey', label: 'Block Key', type: 'text', placeholder: 'e.g. text_1', hint: 'Unique identifier for this block' },
           {
             key: 'message', label: 'Message', type: 'textarea',
             placeholder: 'Type your message here...', rows: 4, required: true,
@@ -72,6 +73,7 @@ const schemas: NodeConfigSchema[] = [
         title: 'Input Settings',
         icon: '📎',
         fields: [
+          { key: 'promptKey', label: 'Block Key', type: 'text', placeholder: 'e.g. input_1', hint: 'Unique identifier for this block' },
           {
             key: 'message', label: 'Message Prompt', type: 'textarea',
             placeholder: 'e.g. Please upload your ID...', rows: 2, required: true,
@@ -119,6 +121,7 @@ const schemas: NodeConfigSchema[] = [
         title: 'Card Content',
         icon: '🃏',
         fields: [
+          { key: 'promptKey', label: 'Block Key', type: 'text', placeholder: 'e.g. card_1', hint: 'Unique identifier for this block' },
           { key: 'title', label: 'Title', type: 'text', placeholder: 'Card title', required: true },
           { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Optional subtitle' },
           { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Card content', rows: 3 },
@@ -233,6 +236,7 @@ const schemas: NodeConfigSchema[] = [
         title: 'Branching Type',
         icon: '🔀',
         fields: [
+          { key: 'promptKey', label: 'Block Key', type: 'text', placeholder: 'e.g. cond_1', hint: 'Unique identifier for this block' },
           {
             key: 'conditionType', label: 'Evaluation Mode', type: 'select',
             options: [
@@ -398,6 +402,7 @@ const schemas: NodeConfigSchema[] = [
         title: 'Database',
         icon: '🗄️',
         fields: [
+          { key: 'promptKey', label: 'Block Key', type: 'text', placeholder: 'e.g. db_save_1', hint: 'Unique identifier for this block' },
           { key: 'collection', label: 'Collection / Table', type: 'text', placeholder: 'e.g. users, orders, leads', required: true, hint: 'The database collection or table name.' },
           {
             key: 'operation', label: 'Operation', type: 'select',
