@@ -1,4 +1,5 @@
 import type { FlowNode, FlowEdge, QuestionnaireNodeData } from '../types';
+import { NODE_LIBRARY } from '../constants/nodeLibrary';
 
 // ─────────────────────────────────────────────────────────────
 // PROMPTS EXPORT — questionnaire nodes only (senior engineer format)
@@ -46,6 +47,13 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
       text: data.text || '',
       props: type,
     };
+
+    const libItem = NODE_LIBRARY.find(item => item.type === d.nodeType);
+    if (d.description) {
+      prompt.description = d.description;
+    } else if (libItem?.description) {
+      prompt.description = libItem.description;
+    }
 
     if (isTextInput) {
       // TEXT mode: no predefined answers, but keep variable mappings
@@ -152,7 +160,7 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
     const config: Record<string, any> = {};
     const skipKeys = new Set([
       'label', 'nodeType', 'category', 'icon', 
-      'isConfigured', 'hasError', 'errorMessage', 'description',
+      'isConfigured', 'hasError', 'errorMessage',
       'pIndex', 'aIndex', 'keyPattern', 'keyPatternHuman',
     ]);
     
@@ -199,6 +207,14 @@ export function flowToSteps(nodes: FlowNode[], edges: FlowEdge[]): FlowStep[] {
         config.htmlEmail = value;
       } else {
         config[key] = value;
+      }
+    }
+
+    // ─── Inject description from library if not provided by user ───
+    if (!config.description) {
+      const libItem = NODE_LIBRARY.find(item => item.type === d.nodeType);
+      if (libItem?.description) {
+        config.description = libItem.description;
       }
     }
 
