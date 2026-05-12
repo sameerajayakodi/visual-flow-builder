@@ -37,16 +37,19 @@ function getDynamicOutputs(data: FlowNodeData): { id: string; label: string }[] 
 }
 
 // ─── Answer Handles Bar: shows labels ABOVE each handle ───
-const AnswerHandlesBar: React.FC<{ outputs: { id: string; label: string }[] }> = ({ outputs }) => {
+const AnswerHandlesBar: React.FC<{ outputs: { id: string; label: string }[], nodeType: string }> = ({ outputs, nodeType }) => {
   return (
     <div className="flow-node__answers-bar">
       {outputs.map((output, i) => {
+        const isQuestionnaire = nodeType === 'questionnaire';
+        const displayLabel = isQuestionnaire ? String(i + 1) : output.label;
         return (
           <div
             key={output.id}
-            className="flow-node__answer-slot"
+            className={`flow-node__answer-slot ${isQuestionnaire ? 'flow-node__answer-slot--icon' : ''}`}
+            title={output.label}
           >
-            <span className="flow-node__answer-label">{output.label}</span>
+            <span className="flow-node__answer-label">{displayLabel}</span>
             <Handle
               type="source"
               position={Position.Bottom}
@@ -60,14 +63,31 @@ const AnswerHandlesBar: React.FC<{ outputs: { id: string; label: string }[] }> =
   );
 };
 
-// ─── Question text preview ───
+// ─── Question text & Options preview ───
 const QuestionPreview: React.FC<{ data: any }> = ({ data }) => {
   const text = data.text || data.message || '';
-  if (!text) return null;
+  const isQuestionnaire = data.nodeType === 'questionnaire';
+  const hasOptions = isQuestionnaire && data.answers?.length > 0;
+  
+  if (!text && !hasOptions) return null;
   const maxLen = 80;
   return (
-    <div className="flow-node__question-text">
-      "{text.slice(0, maxLen)}{text.length > maxLen ? '...' : ''}"
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+      {text && (
+        <div className="flow-node__question-text" style={{ marginTop: 0 }}>
+          "{text.slice(0, maxLen)}{text.length > maxLen ? '...' : ''}"
+        </div>
+      )}
+      {hasOptions && (
+        <div className="flow-node__options-preview">
+          {data.answers.slice(0, 10).map((ans: any, i: number) => (
+            <div key={i} className="flow-node__option-item" title={ans.text}>
+              <span className="flow-node__option-idx">{i + 1}</span>
+              <span className="flow-node__option-txt">{ans.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -267,8 +287,10 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
         {!hasDynamic && !qData && <FallbackPreview data={data} />}
       </div>
 
-      {/* ─── Answer labels + handles bar ─── */}
-      {hasDynamic && <AnswerHandlesBar outputs={dynamicOutputs!} />}
+      {/* ─── Answer labels */}
+      {hasDynamic && (
+        <AnswerHandlesBar outputs={dynamicOutputs} nodeType={data.nodeType} />
+      )}
 
       {/* Single output handle for non-choice nodes */}
       {!isEnd && !hasDynamic && !isConditionRules && !isEnding && (
