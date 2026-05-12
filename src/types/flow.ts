@@ -27,6 +27,7 @@ export type FlowNodeType =
   | 'sendEmail'
   | 'aiPrompt'
   | 'databaseAction'
+  | 'dbSave'
   | 'notification'
   | 'assignAgent'
   | 'approvalRequest'
@@ -201,6 +202,14 @@ export interface DatabaseActionNodeData extends BaseNodeData {
   resultVariable?: string;
 }
 
+export interface DbSaveNodeData extends BaseNodeData {
+  nodeType: 'dbSave';
+  collection: string;
+  operation: 'insert' | 'update' | 'upsert';
+  fields: Array<{ field: string; value: string }>;
+  condition?: string;
+}
+
 export interface SaveVariableNodeData extends BaseNodeData {
   nodeType: 'saveVariable';
   variableName: string;
@@ -292,6 +301,7 @@ export type FlowNodeData =
   | EndNodeData
   | HttpRequestNodeData
   | DatabaseActionNodeData
+  | DbSaveNodeData
   | SaveVariableNodeData
   | SendEmailNodeData
   | AiPromptNodeData

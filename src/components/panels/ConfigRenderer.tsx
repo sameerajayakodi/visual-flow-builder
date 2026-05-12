@@ -296,13 +296,40 @@ const ListWidget: React.FC<{
   };
 
   const updateItem = (idx: number, key: string, value: any) => {
-    onChange(items.map((item, i) => (i === idx ? { ...item, [key]: value } : item)));
+    onChange(items.map((item, i) => {
+      if (i === idx) {
+        const updatedItem = { ...item, [key]: value };
+        
+        // Auto-fill 'value' when typing 'text' in answer-list
+        if (listType === 'answer-list' && key === 'text') {
+          const oldTextKey = (item.text || '').toLowerCase().replace(/[\s\W]+/g, '_').replace(/^_|_$/g, '');
+          const currentVal = item.value || '';
+          
+          // If the current value is empty, OR if it matches the auto-generated key of the old text
+          if (!currentVal || currentVal === oldTextKey) {
+            updatedItem.value = (value || '').toLowerCase().replace(/[\s\W]+/g, '_').replace(/^_|_$/g, '');
+          }
+        }
+        
+        return updatedItem;
+      }
+      return item;
+    }));
   };
 
   const isCardStyle = listType === 'card-list' || listType === 'field-list';
 
   return (
     <div className={isCardStyle ? 'config-card-list' : 'config-rules'}>
+      {!isCardStyle && items.length > 0 && (
+        <div className="config-rule-headers">
+          {itemSchema.map((f) => (
+            <span key={f.key} className="config-rule-header">
+              {f.label}
+            </span>
+          ))}
+        </div>
+      )}
       {items.map((item: any, idx: number) => (
         <div key={item.id || idx} className={isCardStyle ? 'config-card-item' : 'config-rule-item'}>
           {isCardStyle && (

@@ -298,11 +298,34 @@
   flex-direction: column;
   gap: 8px;
 }
+.config-rule-headers {
+  display: flex;
+  gap: 6px;
+  padding-right: 30px;
+  margin-bottom: -2px;
+}
+.config-rule-header {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
 .config-rule-item {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+.config-rule-item > * {
+  flex: 1;
+  min-width: 0;
+}
+.config-rule-item > .config-button-remove,
+.config-rule-item > .config-field__suffix {
+  flex: none;
 }
 
 .config-color-grid {
