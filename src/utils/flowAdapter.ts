@@ -15,36 +15,31 @@ import { NODE_LIBRARY } from '../constants/nodeLibrary';
 export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
   const prompts: any[] = [];
 
-  // Build nodeId → global step index lookup (0-based) to match the steps array
   const stepNodes = nodes.filter(n => n.data.nodeType !== 'notes');
   const globalNodeIndexMap = new Map<string, number>();
-  stepNodes.forEach((node, i) => {
+
+  // Sort ALL step nodes by Y position (top to bottom)
+  const sortedNodes = stepNodes.sort((a, b) => (a.position?.y ?? 0) - (b.position?.y ?? 0));
+
+  sortedNodes.forEach((node, i) => {
     globalNodeIndexMap.set(node.id, i);
   });
 
-  // Get questionnaire nodes sorted by Y position (top to bottom)
-  const qNodes = nodes
-    .filter(n => n.type === 'questionnaire')
-    .sort((a, b) => (a.position?.y ?? 0) - (b.position?.y ?? 0));
+  sortedNodes.forEach((node, i) => {
+    const d = node.data as any;
 
-  qNodes.forEach((node, i) => {
-    const data = node.data as QuestionnaireNodeData;
-    const d = data as any;
+    let text = d.text || d.message || '';
+    if (!text && d.nodeType === 'trigger') text = 'Flow Start';
 
-    const type = Array.isArray(data.promptProps)
-      ? data.promptProps
-      : (data.promptProps ? [data.promptProps] : ['SINGLE_CHOICE']);
+    let type = d.promptProps ? (Array.isArray(d.promptProps) ? d.promptProps : [d.promptProps]) : [d.nodeType.toUpperCase()];
+    let language = d.language || 'ENGLISH';
+    let key = d.promptKey || `${d.nodeType}_${i}`;
 
-    const isTextInput = type.includes('TEXT');
-    const isEnding = type.includes('ENDING');
-    const inputFormat = (d.inputFormat || 'BUTTON').toUpperCase();
-
-    // Build prompt object matching the exact requested JSON payload
     const prompt: any = {
       pIndex: i,
-      key: data.promptKey || `prompt_${i}`,
-      language: data.language || 'ENGLISH',
-      text: data.text || '',
+      key: key,
+      language: language,
+      text: text,
       props: type,
     };
 
@@ -55,38 +50,46 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
       prompt.description = libItem.description;
     }
 
-    if (isTextInput) {
-      // TEXT mode: no predefined answers, but keep variable mappings
-      if (d.variableName) prompt.saveToVariable = d.variableName;
-      if (d.inputType) prompt.expectedInputType = d.inputType;
-
-      // Resolve next from default edge
-      const edge = edges.find(e => e.source === node.id);
-      let nextPIndex = 99;
-      let nextPromptLanguage = data.language || 'ENGLISH';
-
-      if (edge) {
-        const targetNode = nodes.find(n => n.id === edge.target);
-        if (targetNode) {
-          nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? 99;
-          nextPromptLanguage = (targetNode.data as any).language || 'ENGLISH';
-        }
+    // Embed all other config fields dynamically so nothing is lost
+    const skipKeys = new Set([
+      'label', 'nodeType', 'category', 'icon', 
+      'isConfigured', 'hasError', 'errorMessage', 'description',
+      'pIndex', 'aIndex', 'keyPattern', 'keyPatternHuman',
+      'promptProps', 'promptKey', 'text', 'message', 'language', 'answers', 'cases', 'buttons'
+    ]);
+    
+    for (const [k, v] of Object.entries(d)) {
+      if (!skipKeys.has(k)) {
+        prompt[k] = v;
       }
-      
-      prompt.answers = [];
-    } else if (isEnding) {
-      prompt.answers = [];
-    } else {
-      // Choice mode: map answers with routing
-      prompt.answers = (data.answers || []).map((ans, ansIdx) => {
-        const edge = edges.find(e => e.source === node.id && e.sourceHandle === ans.id);
-        let nextPIndex = 99;
-        let nextPromptLanguage = data.language || 'ENGLISH';
+    }
 
+    prompt.answers = [];
+    const outEdges = edges.filter(e => e.source === node.id);
+
+    const inEdges = edges.filter(e => e.target === node.id);
+    const prevPIndices = inEdges.map(e => {
+      const sourceNode = sortedNodes.find(n => n.id === e.source);
+      return sourceNode ? globalNodeIndexMap.get(sourceNode.id) : null;
+    }).filter(i => i !== null && i !== undefined) as number[];
+
+    if (prevPIndices.length === 1) {
+      prompt.prevPIndex = prevPIndices[0];
+    } else if (prevPIndices.length > 1) {
+      prompt.prevPIndex = prevPIndices;
+    }
+
+    if (d.nodeType === 'questionnaire' && !type.includes('TEXT') && !type.includes('ENDING')) {
+      const inputFormat = (d.inputFormat || 'BUTTON').toUpperCase();
+      prompt.answers = (d.answers || []).map((ans: any, ansIdx: number) => {
+        const edge = outEdges.find(e => e.sourceHandle === ans.id);
+        let nextPIndex: number | null = null;
+        let nextPromptLanguage = language;
+        
         if (edge) {
-          const targetNode = nodes.find(n => n.id === edge.target);
+          const targetNode = sortedNodes.find(n => n.id === edge.target);
           if (targetNode) {
-            nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? 99;
+            nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? null;
             nextPromptLanguage = (targetNode.data as any).language || 'ENGLISH';
           }
         }
@@ -103,6 +106,59 @@ export function flowToPrompts(nodes: FlowNode[], edges: FlowEdge[]) {
           nextPIndex,
         };
       });
+    } else {
+      // For non-questionnaire or single-route nodes
+      if (outEdges.length > 0) {
+        if (d.nodeType === 'condition' || d.nodeType === 'randomSplit' || d.buttons?.length > 0 || d.cases?.length > 0) {
+           outEdges.forEach((edge, eIdx) => {
+              const targetNode = sortedNodes.find(n => n.id === edge.target);
+              const nextPIndex = targetNode ? (globalNodeIndexMap.get(targetNode.id) ?? null) : null;
+              
+              let ansText = 'Route';
+              let aIndex = eIdx + 1;
+              
+              if (d.buttons?.length) {
+                const match = d.buttons.find((b: any) => b.id === edge.sourceHandle);
+                if (match) ansText = match.label;
+              } else if (d.cases?.length) {
+                const match = d.cases.find((c: any) => c.id === edge.sourceHandle);
+                if (match) ansText = match.label || match.value;
+              } else if (d.nodeType === 'condition') {
+                ansText = edge.sourceHandle === 'yes' ? 'Yes' : 'No';
+                aIndex = edge.sourceHandle === 'yes' ? 1 : 2;
+              }
+
+              prompt.answers.push({
+                aIndex,
+                keyPattern: String(aIndex),
+                keyPatternHuman: String(aIndex),
+                text: ansText,
+                props: ['ROUTE'],
+                nextPIndex,
+              });
+           });
+        } else {
+          // Single default output
+          const targetNode = sortedNodes.find(n => n.id === outEdges[0].target);
+          if (targetNode) {
+            prompt.nextPIndex = globalNodeIndexMap.get(targetNode.id) ?? null;
+          } else {
+            prompt.nextPIndex = null;
+          }
+        }
+      } else {
+        // No outgoing edges
+        prompt.nextPIndex = null;
+      }
+    }
+
+    if (prompt.answers.length === 0) {
+      delete prompt.answers;
+    }
+    
+    // Fallback for single route nodes
+    if (!prompt.answers && prompt.nextPIndex === undefined) {
+      prompt.nextPIndex = null;
     }
 
     prompts.push(prompt);

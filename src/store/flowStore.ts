@@ -560,7 +560,7 @@ export const useFlowStore = create<FlowState>()(
         // Senior engineer format (questionnaire only)
         prompts: flowToPrompts(state.nodes, state.edges),
         // Generic routing map (ALL node types)
-        steps: flowToSteps(state.nodes, state.edges),
+        // steps: flowToSteps(state.nodes, state.edges),
         variables: state.variables,
         metadata: {
           createdAt: new Date().toISOString(),
