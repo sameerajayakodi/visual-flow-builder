@@ -227,17 +227,38 @@ export const useFlowStore = create<FlowState>()(
 
           // ─── Sync edge labels when answers/buttons/cases are renamed ───
           const dynamicItems: { id: string; label: string }[] = [];
+          const validSourceHandles = new Set<string>(['source', 'yes', 'no', 'default']);
+
           if (m.answers?.length) {
-            m.answers.forEach((a: any) => dynamicItems.push({ id: a.id, label: a.text }));
-          } else if (m.buttons?.length) {
-            m.buttons.forEach((b: any) => dynamicItems.push({ id: b.id, label: b.label }));
-          } else if (m.cases?.length) {
-            m.cases.forEach((c: any) => dynamicItems.push({ id: c.id, label: c.label || c.value }));
+            m.answers.forEach((a: any) => {
+              dynamicItems.push({ id: a.id, label: a.text });
+              validSourceHandles.add(a.id);
+            });
           }
-          if (dynamicItems.length > 0) {
-            updatedEdges = updatedEdges.map(e => {
+          if (m.buttons?.length) {
+            m.buttons.forEach((b: any) => {
+              dynamicItems.push({ id: b.id, label: b.label });
+              validSourceHandles.add(b.id);
+            });
+          }
+          if (m.cases?.length) {
+            m.cases.forEach((c: any) => {
+              dynamicItems.push({ id: c.id, label: c.label || c.value });
+              validSourceHandles.add(c.id);
+            });
+          }
+
+          // ─── Filter orphaned edges and update labels ───
+          updatedEdges = updatedEdges
+            .filter((e) => {
+              if (e.source !== nodeId) return true;
+              if (!e.sourceHandle) return true;
+              // If it's from this node, the handle MUST still exist
+              return validSourceHandles.has(e.sourceHandle);
+            })
+            .map((e) => {
               if (e.source !== nodeId) return e;
-              const matchItem = dynamicItems.find(item => item.id === e.sourceHandle);
+              const matchItem = dynamicItems.find((item) => item.id === e.sourceHandle);
               if (matchItem && matchItem.label) {
                 return {
                   ...e,
@@ -247,7 +268,6 @@ export const useFlowStore = create<FlowState>()(
               }
               return e;
             });
-          }
 
           // Auto-recheck configuration status using schema
           m.isConfigured = isNodeConfigured(merged.nodeType, m);
