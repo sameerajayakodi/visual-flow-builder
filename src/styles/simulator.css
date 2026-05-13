@@ -5,7 +5,7 @@
   flex-direction: column;
   border-left: 1px solid var(--border);
   height: 100%;
-  font-family: inherit;
+  font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   z-index: 40;
 }
 
@@ -33,15 +33,52 @@
   background: #202c33;
 }
 
-.simulator-header-title {
+.simulator-header-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 16px;
+  gap: 12px;
 }
 
-.simulator-restart-btn {
+.simulator-avatar {
+  width: 40px;
+  height: 40px;
+  background: #dfe5e7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  overflow: hidden;
+}
+
+.simulator-panel.dark .simulator-avatar {
+  background: #6b7c85;
+}
+
+.simulator-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.simulator-header-title {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 21px;
+}
+
+.simulator-header-subtitle {
+  font-size: 13px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.simulator-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.simulator-action-btn {
   background: none;
   border: none;
   color: white;
@@ -54,7 +91,7 @@
   transition: background 0.2s;
 }
 
-.simulator-restart-btn:hover {
+.simulator-action-btn:hover {
   background: rgba(255,255,255,0.1);
 }
 
@@ -65,6 +102,18 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  background-repeat: repeat;
+  background-size: 400px;
+  position: relative;
+}
+
+.simulator-panel.dark .simulator-messages {
+  background-color: #0b141a;
+}
+
+.simulator-panel:not(.dark) .simulator-messages {
+  background-color: #efeae2;
 }
 
 .simulator-msg-wrap {
@@ -82,38 +131,104 @@
 
 .simulator-msg {
   max-width: 80%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  line-height: 1.4;
+  padding: 6px 7px 8px 9px;
+  border-radius: 7.5px;
+  font-size: 14.2px;
+  line-height: 19px;
   position: relative;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
   word-wrap: break-word;
+}
+
+.simulator-msg-text {
   white-space: pre-wrap;
+  display: inline;
+}
+
+.simulator-msg-spacer {
+  display: inline-block;
+  width: 60px;
+}
+
+.simulator-msg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.simulator-msg-wrap.bot .simulator-msg {
+  border-top-left-radius: 0;
+}
+.simulator-msg-wrap.bot .simulator-msg::before {
+  left: -8px;
+  border-width: 0 8px 8px 0;
+}
+.simulator-panel:not(.dark) .simulator-msg-wrap.bot .simulator-msg::before {
+  border-color: transparent #ffffff transparent transparent;
+}
+.simulator-panel.dark .simulator-msg-wrap.bot .simulator-msg::before {
+  border-color: transparent #202c33 transparent transparent;
+}
+
+.simulator-msg-wrap.user .simulator-msg {
+  border-top-right-radius: 0;
+}
+.simulator-msg-wrap.user .simulator-msg::before {
+  right: -8px;
+  border-width: 0 0 8px 8px;
+}
+.simulator-panel:not(.dark) .simulator-msg-wrap.user .simulator-msg::before {
+  border-color: transparent transparent transparent #d9fdd3;
+}
+.simulator-panel.dark .simulator-msg-wrap.user .simulator-msg::before {
+  border-color: transparent transparent transparent #005c4b;
 }
 
 .simulator-panel:not(.dark) .simulator-msg.bot {
   background: #ffffff;
   color: #111b21;
-  border-top-left-radius: 0;
 }
 
 .simulator-panel:not(.dark) .simulator-msg.user {
   background: #d9fdd3;
   color: #111b21;
-  border-top-right-radius: 0;
 }
 
 .simulator-panel.dark .simulator-msg.bot {
   background: #202c33;
   color: #e9edef;
-  border-top-left-radius: 0;
 }
 
 .simulator-panel.dark .simulator-msg.user {
   background: #005c4b;
   color: #e9edef;
-  border-top-right-radius: 0;
+}
+
+.simulator-msg-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+}
+
+.simulator-msg-time {
+  font-size: 11px;
+  color: #667781;
+}
+.simulator-panel.dark .simulator-msg-time {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.simulator-msg-status {
+  color: #53bdeb;
+  display: flex;
+  align-items: center;
 }
 
 .simulator-options {

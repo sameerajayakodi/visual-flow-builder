@@ -9,6 +9,7 @@ interface Message {
   inputFormat?: string;
   mediaUrl?: string;
   mediaType?: string;
+  timestamp?: string;
   isEnd?: boolean;
 }
 
@@ -20,8 +21,8 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
   if (format === 'LIST' || format === 'DROPDOWN') {
     return (
       <div className="simulator-options-list">
-        <select 
-          className="simulator-select" 
+        <select
+          className="simulator-select"
           onChange={(e) => {
             const opt = options.find((o) => o.text === e.target.value);
             if (opt) onSelect(opt);
@@ -42,8 +43,8 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
       <div className="simulator-options-radio">
         {options.map((opt, idx) => (
           <label key={idx} className="simulator-radio-label">
-            <input 
-              type="radio" 
+            <input
+              type="radio"
               name={`radio-${options[0].id || Math.random()}`}
               value={opt.text}
               onChange={() => setSelected([opt.text])}
@@ -52,8 +53,8 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
             <span>{opt.text}</span>
           </label>
         ))}
-        <button 
-          className="simulator-submit-btn" 
+        <button
+          className="simulator-submit-btn"
           disabled={selected.length === 0}
           onClick={() => {
             const opt = options.find((o) => o.text === selected[0]);
@@ -71,7 +72,7 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
       <div className="simulator-options-checkbox">
         {options.map((opt, idx) => (
           <label key={idx} className="simulator-checkbox-label">
-            <input 
+            <input
               type="checkbox"
               value={opt.text}
               checked={selected.includes(opt.text)}
@@ -83,8 +84,8 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
             <span>{opt.text}</span>
           </label>
         ))}
-        <button 
-          className="simulator-submit-btn" 
+        <button
+          className="simulator-submit-btn"
           disabled={selected.length === 0}
           onClick={() => {
             // For multichoice, we might need a custom option object or we just pick the first option's nextPIndex
@@ -126,7 +127,7 @@ const SimulatorPanel: React.FC = () => {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [prompts, setPrompts] = useState<any[]>([]);
   const [activePromptIndex, setActivePromptIndex] = useState<number | null>(null);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -152,6 +153,7 @@ const SimulatorPanel: React.FC = () => {
   };
 
   const showSimulator = useFlowStore((s) => s.showSimulator);
+  const toggleSimulator = useFlowStore((s) => s.toggleSimulator);
 
   useEffect(() => {
     startSimulation();
@@ -200,7 +202,7 @@ const SimulatorPanel: React.FC = () => {
 
     // Otherwise, it's just a message or something that doesn't wait for input
     addBotMessage(text);
-    
+
     if (prompt.nextPIndex !== null && prompt.nextPIndex !== undefined) {
       // Small delay to feel natural
       setTimeout(() => {
@@ -212,17 +214,19 @@ const SimulatorPanel: React.FC = () => {
   };
 
   const addBotMessage = (text: string, isEnd = false, options?: any[], inputFormat?: string) => {
-    setMessages((prev) => [...prev, { id: Date.now().toString() + Math.random(), sender: 'bot', text, options, inputFormat, isEnd }]);
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages((prev) => [...prev, { id: Date.now().toString() + Math.random(), sender: 'bot', text, options, inputFormat, timestamp, isEnd }]);
   };
 
   const addUserMessage = (text: string, mediaUrl?: string, mediaType?: string) => {
-    setMessages((prev) => [...prev, { id: Date.now().toString() + Math.random(), sender: 'user', text, mediaUrl, mediaType }]);
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages((prev) => [...prev, { id: Date.now().toString() + Math.random(), sender: 'user', text, mediaUrl, mediaType, timestamp }]);
   };
 
   const handleOptionClick = (option: any) => {
     addUserMessage(option.text);
     const activePrompt = prompts.find((p) => p.pIndex === activePromptIndex);
-    
+
     let newVars = { ...variables };
     if (activePrompt && activePrompt.variableName) {
       newVars[activePrompt.variableName] = option.text; // or option.key
@@ -230,7 +234,7 @@ const SimulatorPanel: React.FC = () => {
     }
 
     const nextIdx = option.nextPIndex !== undefined ? option.nextPIndex : activePrompt?.nextPIndex;
-    
+
     if (nextIdx !== null && nextIdx !== undefined) {
       setTimeout(() => processPrompt(nextIdx, newVars), 300);
     } else {
@@ -288,7 +292,7 @@ const SimulatorPanel: React.FC = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
         handleSend('', audioUrl, 'audio');
-        
+
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -310,18 +314,30 @@ const SimulatorPanel: React.FC = () => {
   return (
     <div className={`simulator-panel ${darkMode ? 'dark' : ''}`}>
       <div className="simulator-header">
-        <div className="simulator-header-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          {flowName}
+        <div className="simulator-header-profile">
+          <div className="simulator-avatar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+            </svg>
+          </div>
+          <div className="simulator-header-info">
+            <div className="simulator-header-title">{flowName}</div>
+            <div className="simulator-header-subtitle">online</div>
+          </div>
         </div>
-        <button className="simulator-restart-btn" onClick={startSimulation} title="Restart Simulation">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-        </button>
+        <div className="simulator-header-actions">
+          <button className="simulator-action-btn" onClick={startSimulation} title="Restart Simulation">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </button>
+          <button className="simulator-action-btn" onClick={toggleSimulator} title="Close Simulator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="simulator-messages">
@@ -347,14 +363,29 @@ const SimulatorPanel: React.FC = () => {
                   )}
                 </div>
               )}
-              {msg.text && <div className="simulator-msg-text">{msg.text}</div>}
+              {msg.text && (
+                <div className="simulator-msg-text">
+                  {msg.text}
+                  <span className="simulator-msg-spacer"></span>
+                </div>
+              )}
               {msg.options && msg.options.length > 0 && (
-                <SimulatorMessageOptions 
-                  options={msg.options} 
-                  inputFormat={msg.inputFormat} 
-                  onSelect={handleOptionClick} 
+                <SimulatorMessageOptions
+                  options={msg.options}
+                  inputFormat={msg.inputFormat}
+                  onSelect={handleOptionClick}
                 />
               )}
+              <div className="simulator-msg-meta">
+                <span className="simulator-msg-time">{msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                {msg.sender === 'user' && (
+                  <span className="simulator-msg-status">
+                    <svg viewBox="0 0 16 15" width="16" height="15">
+                      <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
+                    </svg>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -362,10 +393,10 @@ const SimulatorPanel: React.FC = () => {
       </div>
 
       <div className="simulator-input-area">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) {
@@ -374,7 +405,7 @@ const SimulatorPanel: React.FC = () => {
               handleSend('', url, type);
             }
             e.target.value = '';
-          }} 
+          }}
         />
         <button className="simulator-icon-btn" title="Attach Media" onClick={() => fileInputRef.current?.click()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -392,9 +423,9 @@ const SimulatorPanel: React.FC = () => {
           }}
         />
         {!inputValue.trim() ? (
-          <button 
-            className="simulator-icon-btn" 
-            title={isRecording ? "Stop Recording" : "Voice Message"} 
+          <button
+            className="simulator-icon-btn"
+            title={isRecording ? "Stop Recording" : "Voice Message"}
             onClick={isRecording ? stopRecording : startRecording}
             style={isRecording ? { color: '#ef4444' } : {}}
           >
