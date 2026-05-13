@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from "react";
 import { useFlowStore } from "../../store";
 import { ConfigPanel } from "../panels";
+import SimulatorPanel from "../panels/SimulatorPanel";
 import { NodeSidebar } from "../sidebar";
 import DebugPanel from "./DebugPanel";
 import FlowCanvas from "./FlowCanvas";
@@ -8,6 +9,7 @@ import Topbar from "./Topbar";
 
 const FlowBuilder: React.FC = () => {
   const darkMode = useFlowStore((s) => s.darkMode);
+  const showSimulator = useFlowStore((s) => s.showSimulator);
   const undo = useFlowStore((s) => s.undo);
   const redo = useFlowStore((s) => s.redo);
   const deleteNode = useFlowStore((s) => s.deleteNode);
@@ -108,7 +110,7 @@ const FlowBuilder: React.FC = () => {
           <FlowCanvas />
           <DebugPanel />
         </div>
-        <ConfigPanel />
+        {showSimulator ? <SimulatorPanel /> : <ConfigPanel />}
       </div>
     </div>
   );

@@ -20,6 +20,8 @@ const Topbar: React.FC = () => {
   const showDebugPanel = useFlowStore((s) => s.showDebugPanel);
   const toggleJsonPreview = useFlowStore((s) => s.toggleJsonPreview);
   const showJsonPreview = useFlowStore((s) => s.showJsonPreview);
+  const toggleSimulator = useFlowStore((s) => s.toggleSimulator);
+  const showSimulator = useFlowStore((s) => s.showSimulator);
   const validateFlow = useFlowStore((s) => s.validateFlow);
   const validationErrors = useFlowStore((s) => s.validationErrors);
   const exportFlow = useFlowStore((s) => s.exportFlow);
@@ -202,6 +204,19 @@ const Topbar: React.FC = () => {
             <rect x="1" y="10" width="14" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M4 12.5H12" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
           </svg>
+        </button>
+
+        <div className="topbar__divider" />
+
+        <button
+          className={`topbar__btn ${showSimulator ? 'topbar__btn--primary' : 'topbar__btn--outline'}`}
+          onClick={toggleSimulator}
+          title="Simulate Flow"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginRight: 6 }}>
+            <path d="M2 2L12 7L2 12V2Z" fill="currentColor" />
+          </svg>
+          Simulate
         </button>
 
       </div>

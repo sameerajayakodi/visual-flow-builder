@@ -46,6 +46,7 @@ interface FlowState {
   showMinimap: boolean;
   showDebugPanel: boolean;
   showJsonPreview: boolean;
+  showSimulator: boolean;
   searchQuery: string;
   sidebarCollapsed: boolean;
   rightPanelCollapsed: boolean;
@@ -93,6 +94,7 @@ interface FlowState {
   toggleMinimap: () => void;
   toggleDebugPanel: () => void;
   toggleJsonPreview: () => void;
+  toggleSimulator: () => void;
   setSearchQuery: (q: string) => void;
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
@@ -138,6 +140,7 @@ export const useFlowStore = create<FlowState>()(
     showMinimap: true,
     showDebugPanel: false,
     showJsonPreview: false,
+    showSimulator: false,
     searchQuery: '',
     sidebarCollapsed: false,
     rightPanelCollapsed: true,
@@ -761,6 +764,7 @@ export const useFlowStore = create<FlowState>()(
     toggleMinimap: () => set((s) => ({ showMinimap: !s.showMinimap })),
     toggleDebugPanel: () => set((s) => ({ showDebugPanel: !s.showDebugPanel })),
     toggleJsonPreview: () => set((s) => ({ showJsonPreview: !s.showJsonPreview })),
+    toggleSimulator: () => set((s) => ({ showSimulator: !s.showSimulator })),
     setSearchQuery: (q) => set({ searchQuery: q }),
     toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     toggleRightPanel: () => set((s) => ({ rightPanelCollapsed: !s.rightPanelCollapsed })),
