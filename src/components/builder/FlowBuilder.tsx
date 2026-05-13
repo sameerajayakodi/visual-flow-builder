@@ -110,7 +110,12 @@ const FlowBuilder: React.FC = () => {
           <FlowCanvas />
           <DebugPanel />
         </div>
-        {showSimulator ? <SimulatorPanel /> : <ConfigPanel />}
+        <div style={{ display: showSimulator ? 'contents' : 'none' }}>
+          <SimulatorPanel />
+        </div>
+        <div style={{ display: !showSimulator ? 'contents' : 'none' }}>
+          <ConfigPanel />
+        </div>
       </div>
     </div>
   );

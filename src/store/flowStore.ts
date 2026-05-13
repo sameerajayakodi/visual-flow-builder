@@ -335,6 +335,7 @@ export const useFlowStore = create<FlowState>()(
         selectedNodeId: nodeId,
         selectedEdgeId: null,
         rightPanelCollapsed: nodeId === null,
+        ...(nodeId !== null && { showSimulator: false }),
       });
     },
 

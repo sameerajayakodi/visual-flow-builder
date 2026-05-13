@@ -151,9 +151,19 @@ const SimulatorPanel: React.FC = () => {
     setActivePromptIndex(null);
   };
 
+  const showSimulator = useFlowStore((s) => s.showSimulator);
+
   useEffect(() => {
     startSimulation();
-  }, []); // Restart when opened
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on initial mount
+
+  useEffect(() => {
+    if (showSimulator) {
+      const flow = exportFlow();
+      setPrompts(flow.prompts || []);
+    }
+  }, [showSimulator, exportFlow]);
 
   const processPrompt = (pIndex: number, currentVars: Record<string, string>) => {
     const prompt = prompts.find((p) => p.pIndex === pIndex);
