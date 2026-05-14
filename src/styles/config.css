@@ -543,3 +543,61 @@
   flex-direction: column;
   gap: 6px;
 }
+
+/* ─── Answer List (compact card layout) ─── */
+.config-answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.config-answer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s;
+}
+.config-answer-item:hover {
+  border-color: var(--accent);
+}
+.config-answer-item__number {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.config-answer-item__fields {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.config-answer-item__text {
+  flex: 2;
+  min-width: 0;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+  border-width: 1px !important;
+}
+.config-answer-item__value {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px !important;
+  font-size: 11px !important;
+  font-family: 'SF Mono', 'Fira Code', monospace !important;
+  color: var(--text-muted) !important;
+  border-width: 1px !important;
+}
+.config-answer-item__value::placeholder {
+  font-style: italic;
+}

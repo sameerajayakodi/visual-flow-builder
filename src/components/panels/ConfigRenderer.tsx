@@ -427,7 +427,7 @@ const FieldWidget: React.FC<{
   }
 };
 
-// ─── List Widget (handles button-list, rule-list, case-list, etc.) ───
+// ─── List Widget (handles button-list, rule-list, case-list, answer-list, etc.) ───
 const ListWidget: React.FC<{
   items: any[];
   onChange: (items: any[]) => void;
@@ -501,6 +501,47 @@ const ListWidget: React.FC<{
   };
 
   const isCardStyle = listType === 'card-list' || listType === 'field-list';
+  const isAnswerList = listType === 'answer-list';
+
+  // ─── ANSWER LIST: Compact card layout with plain inputs ───
+  if (isAnswerList) {
+    return (
+      <div className="config-answer-list">
+        {items.map((item: any, idx: number) => (
+          <div key={item.id || idx} className="config-answer-item">
+            <div className="config-answer-item__number">{idx + 1}</div>
+            <div className="config-answer-item__fields">
+              <input
+                type="text"
+                className="config-field__input config-answer-item__text"
+                value={item.text ?? ''}
+                onChange={(e) => updateItem(idx, 'text', e.target.value)}
+                placeholder="Answer text"
+              />
+              <input
+                type="text"
+                className="config-field__input config-answer-item__value"
+                value={item.value ?? ''}
+                onChange={(e) => updateItem(idx, 'value', e.target.value)}
+                placeholder="key"
+              />
+            </div>
+            <button
+              type="button"
+              className="config-button-remove"
+              onClick={() => removeItem(idx)}
+              title="Remove answer"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button type="button" className="config-button-add" onClick={addItem}>
+          {addLabel}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={isCardStyle ? 'config-card-list' : 'config-rules'}>
