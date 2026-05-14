@@ -1,3 +1,4 @@
+/* ─── Simulator Panel ─── */
 .simulator-panel {
   width: 380px;
   background: var(--bg-primary);
@@ -11,26 +12,29 @@
 
 .simulator-panel.dark {
   background: #0b141a;
+  border-left-color: #233138;
 }
 .simulator-panel:not(.dark) {
   background: #efeae2;
 }
 
+/* ─── Header ─── */
 .simulator-header {
   height: 60px;
-  background: #00a884;
+  background: #008069;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   z-index: 2;
 }
 
 .simulator-panel.dark .simulator-header {
   background: #202c33;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 .simulator-header-profile {
@@ -42,7 +46,7 @@
 .simulator-avatar {
   width: 40px;
   height: 40px;
-  background: #dfe5e7;
+  background: rgba(255,255,255,0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -72,6 +76,10 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+.simulator-panel.dark .simulator-header-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .simulator-header-actions {
   display: flex;
   align-items: center;
@@ -95,6 +103,7 @@
   background: rgba(255,255,255,0.1);
 }
 
+/* ─── Messages Area ─── */
 .simulator-messages {
   flex: 1;
   overflow-y: auto;
@@ -102,20 +111,28 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-  background-repeat: repeat;
-  background-size: 400px;
   position: relative;
 }
 
-.simulator-panel.dark .simulator-messages {
-  background-color: #0b141a;
-}
-
+/* Light mode: WhatsApp beige wallpaper */
 .simulator-panel:not(.dark) .simulator-messages {
   background-color: #efeae2;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  background-repeat: repeat;
+  background-size: 400px;
 }
 
+/* Dark mode: solid dark background with subtle doodle pattern */
+.simulator-panel.dark .simulator-messages {
+  background-color: #0b141a;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  background-repeat: repeat;
+  background-size: 400px;
+  background-blend-mode: overlay;
+  opacity: 1;
+}
+
+/* ─── Message Wraps ─── */
 .simulator-msg-wrap {
   display: flex;
   width: 100%;
@@ -129,15 +146,18 @@
   justify-content: flex-end;
 }
 
+/* ─── Message Bubble ─── */
 .simulator-msg {
   max-width: 80%;
-  padding: 6px 7px 8px 9px;
+  min-width: 80px;
+  padding: 6px 7px 6px 9px;
   border-radius: 7.5px;
   font-size: 14.2px;
   line-height: 19px;
   position: relative;
   box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
   word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .simulator-msg-text {
@@ -147,9 +167,12 @@
 
 .simulator-msg-spacer {
   display: inline-block;
-  width: 60px;
+  width: 68px;
+  height: 1px;
+  vertical-align: baseline;
 }
 
+/* Chat tail triangles */
 .simulator-msg::before {
   content: "";
   position: absolute;
@@ -159,6 +182,7 @@
   border-style: solid;
 }
 
+/* Bot tail */
 .simulator-msg-wrap.bot .simulator-msg {
   border-top-left-radius: 0;
 }
@@ -173,6 +197,7 @@
   border-color: transparent #202c33 transparent transparent;
 }
 
+/* User tail */
 .simulator-msg-wrap.user .simulator-msg {
   border-top-right-radius: 0;
 }
@@ -187,34 +212,39 @@
   border-color: transparent transparent transparent #005c4b;
 }
 
+/* ─── Bubble Colors ─── */
+/* Light mode */
 .simulator-panel:not(.dark) .simulator-msg.bot {
   background: #ffffff;
   color: #111b21;
 }
-
 .simulator-panel:not(.dark) .simulator-msg.user {
   background: #d9fdd3;
   color: #111b21;
 }
 
+/* Dark mode */
 .simulator-panel.dark .simulator-msg.bot {
   background: #202c33;
   color: #e9edef;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
 }
-
 .simulator-panel.dark .simulator-msg.user {
   background: #005c4b;
   color: #e9edef;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
 }
 
+/* ─── Message Meta (timestamp + checkmarks) ─── */
 .simulator-msg-meta {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  position: absolute;
-  bottom: 4px;
-  right: 8px;
+  gap: 3px;
+  float: right;
+  margin-top: 2px;
+  margin-left: 8px;
+  position: relative;
+  top: 4px;
 }
 
 .simulator-msg-time {
@@ -222,7 +252,7 @@
   color: #667781;
 }
 .simulator-panel.dark .simulator-msg-time {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .simulator-msg-status {
@@ -231,6 +261,7 @@
   align-items: center;
 }
 
+/* ─── Option Buttons ─── */
 .simulator-options {
   display: flex;
   flex-direction: column;
@@ -257,6 +288,18 @@
   color: white;
 }
 
+/* Dark mode option buttons */
+.simulator-panel.dark .simulator-option-btn {
+  color: #00a884;
+  border-color: rgba(0, 168, 132, 0.4);
+}
+.simulator-panel.dark .simulator-option-btn:hover {
+  background: #00a884;
+  color: #fff;
+  border-color: #00a884;
+}
+
+/* ─── Input Area ─── */
 .simulator-input-area {
   display: flex;
   align-items: center;
@@ -268,6 +311,7 @@
 
 .simulator-panel.dark .simulator-input-area {
   background: #202c33;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .simulator-input {
@@ -290,6 +334,9 @@
 .simulator-input::placeholder {
   color: #8696a0;
 }
+.simulator-panel.dark .simulator-input::placeholder {
+  color: #8696a0;
+}
 
 .simulator-send-btn {
   background: #00a884;
@@ -310,7 +357,7 @@
   background: #008f6f;
 }
 
-/* Display Formats */
+/* ─── Display Formats (list, radio, checkbox) ─── */
 .simulator-options-list {
   margin-top: 10px;
 }
@@ -350,6 +397,12 @@
   cursor: pointer;
 }
 
+/* Dark mode radio/checkbox label text */
+.simulator-panel.dark .simulator-radio-label,
+.simulator-panel.dark .simulator-checkbox-label {
+  color: #e9edef;
+}
+
 .simulator-submit-btn {
   background: #00a884;
   color: white;
@@ -374,10 +427,11 @@
   background: #008f6f;
 }
 
+/* ─── Icon Buttons (attach, mic) ─── */
 .simulator-icon-btn {
   background: transparent;
   border: none;
-  color: #8696a0;
+  color: #54656f;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -392,6 +446,14 @@
   color: #00a884;
 }
 
+.simulator-panel.dark .simulator-icon-btn {
+  color: #8696a0;
+}
+.simulator-panel.dark .simulator-icon-btn:hover {
+  color: #00a884;
+}
+
+/* ─── Media Messages ─── */
 .simulator-msg-media {
   margin-bottom: 6px;
   border-radius: 8px;
@@ -418,5 +480,21 @@
 }
 
 .simulator-panel.dark .simulator-media-file {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9edef;
+}
+
+/* ─── Scrollbar (dark mode) ─── */
+.simulator-panel.dark .simulator-messages::-webkit-scrollbar {
+  width: 6px;
+}
+.simulator-panel.dark .simulator-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.simulator-panel.dark .simulator-messages::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 3px;
+}
+.simulator-panel.dark .simulator-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.25);
 }

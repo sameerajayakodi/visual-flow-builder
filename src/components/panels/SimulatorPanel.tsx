@@ -363,12 +363,20 @@ const SimulatorPanel: React.FC = () => {
                   )}
                 </div>
               )}
-              {msg.text && (
-                <div className="simulator-msg-text">
-                  {msg.text}
-                  <span className="simulator-msg-spacer"></span>
-                </div>
-              )}
+              <div className="simulator-msg-text">
+                {msg.text || ''}
+                <span className="simulator-msg-spacer"></span>
+                <span className="simulator-msg-meta">
+                  <span className="simulator-msg-time">{msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  {msg.sender === 'user' && (
+                    <span className="simulator-msg-status">
+                      <svg viewBox="0 0 16 15" width="16" height="15">
+                        <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
+                      </svg>
+                    </span>
+                  )}
+                </span>
+              </div>
               {msg.options && msg.options.length > 0 && (
                 <SimulatorMessageOptions
                   options={msg.options}
@@ -376,16 +384,6 @@ const SimulatorPanel: React.FC = () => {
                   onSelect={handleOptionClick}
                 />
               )}
-              <div className="simulator-msg-meta">
-                <span className="simulator-msg-time">{msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                {msg.sender === 'user' && (
-                  <span className="simulator-msg-status">
-                    <svg viewBox="0 0 16 15" width="16" height="15">
-                      <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
-                    </svg>
-                  </span>
-                )}
-              </div>
             </div>
           </div>
         ))}
