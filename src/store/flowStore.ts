@@ -682,78 +682,327 @@ export const useFlowStore = create<FlowState>()(
     validateFlow: () => {
       const state = get();
       const errors: ValidationError[] = [];
+      const d = (node: any) => node.data as any;
 
-      // Check for trigger node
-      const hasTrigger = state.nodes.some((n) => n.data.nodeType === 'trigger');
-      if (!hasTrigger) {
-        errors.push({
-          nodeId: '',
-          message: 'Flow must have a Start Trigger node',
-          severity: 'error',
-        });
+      // ════════════════════════════════════════════════════
+      // 1. FLOW STRUCTURE CHECKS
+      // ════════════════════════════════════════════════════
+
+      const stepNodes = state.nodes.filter(n => n.data.nodeType !== 'notes');
+
+      // 1a. Must have at least one trigger
+      const triggerNodes = stepNodes.filter(n => n.data.nodeType === 'trigger');
+      if (triggerNodes.length === 0) {
+        errors.push({ nodeId: '', message: 'Flow needs a Start Trigger node as an entry point', severity: 'error' });
       }
 
-      // Check orphan nodes (no connections)
-      state.nodes.forEach((node) => {
-        if (node.data.nodeType === 'trigger') return;
-        if (node.data.nodeType === 'notes') return;
+      // 1b. Must have at least 2 step nodes (trigger + something)
+      if (stepNodes.length < 2) {
+        errors.push({ nodeId: '', message: 'Flow should have at least 2 nodes to be meaningful', severity: 'warning' });
+      }
 
-        const hasIncoming = state.edges.some((e) => e.target === node.id);
-        const hasOutgoing = state.edges.some((e) => e.source === node.id);
+      // 1c. Check for dead-end nodes (non-end, non-ENDING nodes with no outgoing)
+      stepNodes.forEach(node => {
+        const nd = d(node);
+        if (nd.nodeType === 'end') return;
+        if (nd.nodeType === 'questionnaire' && nd.promptProps?.includes('ENDING')) return;
+
+        const hasOutgoing = state.edges.some(e => e.source === node.id);
+        if (!hasOutgoing) {
+          errors.push({
+            nodeId: node.id,
+            message: `"${nd.label}" has no outgoing connection — flow will stop here`,
+            severity: 'warning',
+          });
+        }
+      });
+
+      // ════════════════════════════════════════════════════
+      // 2. CONNECTION CHECKS (per node)
+      // ════════════════════════════════════════════════════
+
+      stepNodes.forEach(node => {
+        const nd = d(node);
+        if (nd.nodeType === 'trigger') return; // Trigger has no incoming
+
+        const hasIncoming = state.edges.some(e => e.target === node.id);
+        const hasOutgoing = state.edges.some(e => e.source === node.id);
 
         if (!hasIncoming && !hasOutgoing) {
           errors.push({
             nodeId: node.id,
-            message: `"${node.data.label}" is not connected to any other node`,
+            message: `"${nd.label}" is completely disconnected`,
             severity: 'warning',
           });
         } else if (!hasIncoming) {
           errors.push({
             nodeId: node.id,
-            message: `"${node.data.label}" has no incoming connection`,
+            message: `"${nd.label}" has no incoming connection — it won't be reached`,
             severity: 'warning',
           });
         }
       });
 
-      // Check nodes that require configuration
-      state.nodes.forEach((node) => {
-        if (!node.data.isConfigured && node.data.nodeType !== 'trigger' && node.data.nodeType !== 'end' && node.data.nodeType !== 'notes') {
-          errors.push({
-            nodeId: node.id,
-            message: `"${node.data.label}" needs configuration`,
-            severity: 'info',
+      // ════════════════════════════════════════════════════
+      // 3. PER-NODE TYPE VALIDATION
+      // ════════════════════════════════════════════════════
+
+      stepNodes.forEach(node => {
+        const nd = d(node);
+        const label = nd.label || 'Unnamed';
+
+        switch (nd.nodeType) {
+          // ─── TRIGGER ───
+          case 'trigger': {
+            if (nd.triggerType === 'keyword' && !nd.config?.keyword?.trim()) {
+              errors.push({ nodeId: node.id, field: 'config.keyword', message: `"${label}" — keyword trigger needs a keyword value`, severity: 'warning' });
+            }
+            if (nd.triggerType === 'schedule' && !nd.config?.schedule?.trim()) {
+              errors.push({ nodeId: node.id, field: 'config.schedule', message: `"${label}" — schedule trigger needs a schedule value`, severity: 'warning' });
+            }
+            if ((nd.triggerType === 'api' || nd.triggerType === 'webhook') && !nd.config?.endpoint?.trim()) {
+              errors.push({ nodeId: node.id, field: 'config.endpoint', message: `"${label}" — API/webhook trigger needs an endpoint URL`, severity: 'warning' });
+            }
+            // Trigger should have outgoing
+            const triggerOut = state.edges.some(e => e.source === node.id);
+            if (!triggerOut) {
+              errors.push({ nodeId: node.id, message: `"${label}" — trigger is not connected to any next step`, severity: 'error' });
+            }
+            break;
+          }
+
+          // ─── TEXT MESSAGE ───
+          case 'text': {
+            if (!nd.message?.trim()) {
+              errors.push({ nodeId: node.id, field: 'message', message: `"${label}" — message text is empty`, severity: 'error' });
+            }
+            break;
+          }
+
+          // ─── QUESTIONNAIRE / PROMPT ───
+          case 'questionnaire': {
+            const props: string[] = nd.promptProps || [];
+            const isEnding = props.includes('ENDING');
+            const isText = props.includes('TEXT');
+            const isChoice = props.includes('SINGLE_CHOICE') || props.includes('MULTI_CHOICE');
+
+            // Must have question text
+            if (!nd.text?.trim()) {
+              errors.push({ nodeId: node.id, field: 'text', message: `"${label}" — question text is empty`, severity: 'error' });
+            }
+
+            // Choice nodes: must have at least 1 answer
+            if (isChoice) {
+              if (!nd.answers || nd.answers.length === 0) {
+                errors.push({ nodeId: node.id, field: 'answers', message: `"${label}" — needs at least one answer option`, severity: 'error' });
+              } else {
+                // Check for empty answer text
+                nd.answers.forEach((ans: any, i: number) => {
+                  if (!ans.text?.trim()) {
+                    errors.push({ nodeId: node.id, field: `answers[${i}].text`, message: `"${label}" — answer #${i + 1} has empty text`, severity: 'error' });
+                  }
+                });
+
+                // Check unconnected answer handles
+                const outEdges = state.edges.filter(e => e.source === node.id);
+                const connectedHandles = new Set(outEdges.map(e => e.sourceHandle));
+                nd.answers.forEach((ans: any, i: number) => {
+                  const handleId = ans.id || `ans_${i}`;
+                  if (!connectedHandles.has(handleId)) {
+                    errors.push({
+                      nodeId: node.id,
+                      message: `"${label}" — answer "${ans.text || '#' + (i + 1)}" is not connected to any next step`,
+                      severity: 'warning',
+                    });
+                  }
+                });
+              }
+            }
+
+            // Text input: should have variableName to save the response
+            if (isText && !nd.variableName?.trim()) {
+              errors.push({ nodeId: node.id, field: 'variableName', message: `"${label}" — text input should save response to a variable`, severity: 'info' });
+            }
+
+            // Ending nodes should not have outgoing edges
+            if (isEnding) {
+              const hasOut = state.edges.some(e => e.source === node.id);
+              if (hasOut) {
+                errors.push({ nodeId: node.id, message: `"${label}" — ENDING prompt should not have outgoing connections`, severity: 'warning' });
+              }
+            }
+            break;
+          }
+
+          // ─── GET MEDIA ───
+          case 'getInput': {
+            if (!nd.message?.trim()) {
+              errors.push({ nodeId: node.id, field: 'message', message: `"${label}" — input prompt message is empty`, severity: 'error' });
+            }
+            if (!nd.saveToVariable?.trim() && !nd.variableName?.trim()) {
+              errors.push({ nodeId: node.id, field: 'saveToVariable', message: `"${label}" — should save media to a variable`, severity: 'info' });
+            }
+            break;
+          }
+
+          // ─── CARD ───
+          case 'card': {
+            if (!nd.title?.trim()) {
+              errors.push({ nodeId: node.id, field: 'title', message: `"${label}" — card title is empty`, severity: 'error' });
+            }
+            if (nd.buttons && nd.buttons.length > 0) {
+              nd.buttons.forEach((btn: any, i: number) => {
+                if (!btn.label?.trim()) {
+                  errors.push({ nodeId: node.id, field: `buttons[${i}].label`, message: `"${label}" — button #${i + 1} has no label`, severity: 'error' });
+                }
+              });
+              // Check unconnected button handles
+              const outEdges = state.edges.filter(e => e.source === node.id);
+              const connectedHandles = new Set(outEdges.map(e => e.sourceHandle));
+              nd.buttons.forEach((btn: any, i: number) => {
+                if (btn.id && !connectedHandles.has(btn.id)) {
+                  errors.push({
+                    nodeId: node.id,
+                    message: `"${label}" — button "${btn.label || '#' + (i + 1)}" is not connected`,
+                    severity: 'warning',
+                  });
+                }
+              });
+            }
+            break;
+          }
+
+          // ─── CONDITION / SWITCH ───
+          case 'condition': {
+            const outEdges = state.edges.filter(e => e.source === node.id);
+
+            if (nd.conditionType === 'switch') {
+              if (!nd.variable?.trim()) {
+                errors.push({ nodeId: node.id, field: 'variable', message: `"${label}" — switch needs a variable to check`, severity: 'error' });
+              }
+              if (!nd.cases || nd.cases.length === 0) {
+                errors.push({ nodeId: node.id, field: 'cases', message: `"${label}" — switch needs at least one case`, severity: 'error' });
+              } else {
+                nd.cases.forEach((c: any, i: number) => {
+                  if (!c.value?.trim()) {
+                    errors.push({ nodeId: node.id, field: `cases[${i}].value`, message: `"${label}" — case #${i + 1} has no match value`, severity: 'error' });
+                  }
+                });
+              }
+            } else {
+              // Rules mode
+              if (!nd.rules || nd.rules.length === 0) {
+                errors.push({ nodeId: node.id, field: 'rules', message: `"${label}" — condition needs at least one rule`, severity: 'warning' });
+              } else {
+                nd.rules.forEach((r: any, i: number) => {
+                  if (!r.field?.trim()) {
+                    errors.push({ nodeId: node.id, field: `rules[${i}].field`, message: `"${label}" — rule #${i + 1} has no field`, severity: 'error' });
+                  }
+                });
+              }
+              if (outEdges.length < 2) {
+                errors.push({ nodeId: node.id, message: `"${label}" — condition needs both Yes and No branches connected`, severity: 'warning' });
+              }
+            }
+            break;
+          }
+
+          // ─── DELAY ───
+          case 'delay': {
+            if (!nd.duration || nd.duration <= 0) {
+              errors.push({ nodeId: node.id, field: 'duration', message: `"${label}" — delay duration must be greater than 0`, severity: 'error' });
+            }
+            break;
+          }
+
+          // ─── HTTP REQUEST / API ───
+          case 'httpRequest': {
+            if (!nd.url?.trim()) {
+              errors.push({ nodeId: node.id, field: 'url', message: `"${label}" — API URL is required`, severity: 'error' });
+            } else if (!nd.url.startsWith('http://') && !nd.url.startsWith('https://') && !nd.url.startsWith('{{')) {
+              errors.push({ nodeId: node.id, field: 'url', message: `"${label}" — URL should start with http:// or https://`, severity: 'warning' });
+            }
+            break;
+          }
+
+          // ─── SEND EMAIL ───
+          case 'sendEmail': {
+            if (!nd.to?.trim()) {
+              errors.push({ nodeId: node.id, field: 'to', message: `"${label}" — recipient email is required`, severity: 'error' });
+            }
+            if (!nd.subject?.trim()) {
+              errors.push({ nodeId: node.id, field: 'subject', message: `"${label}" — email subject is required`, severity: 'error' });
+            }
+            break;
+          }
+
+          // ─── NOTIFICATION ───
+          case 'notification': {
+            if (!nd.title?.trim()) {
+              errors.push({ nodeId: node.id, field: 'title', message: `"${label}" — notification title is required`, severity: 'error' });
+            }
+            if (!nd.message?.trim()) {
+              errors.push({ nodeId: node.id, field: 'message', message: `"${label}" — notification message is required`, severity: 'error' });
+            }
+            break;
+          }
+
+          // ─── DATABASE SAVE ───
+          case 'dbSave': {
+            if (!nd.collection?.trim()) {
+              errors.push({ nodeId: node.id, field: 'collection', message: `"${label}" — collection/table name is required`, severity: 'error' });
+            }
+            if (!nd.fields || nd.fields.length === 0) {
+              errors.push({ nodeId: node.id, field: 'fields', message: `"${label}" — needs at least one field mapping`, severity: 'warning' });
+            } else {
+              nd.fields.forEach((f: any, i: number) => {
+                if (!f.field?.trim()) {
+                  errors.push({ nodeId: node.id, field: `fields[${i}].field`, message: `"${label}" — field mapping #${i + 1} has no column name`, severity: 'error' });
+                }
+              });
+            }
+            if ((nd.operation === 'update' || nd.operation === 'upsert') && !nd.condition?.trim()) {
+              errors.push({ nodeId: node.id, field: 'condition', message: `"${label}" — update/upsert needs a where condition`, severity: 'warning' });
+            }
+            break;
+          }
+
+          // ─── END ───
+          case 'end': {
+            const endOut = state.edges.filter(e => e.source === node.id);
+            if (endOut.length > 0) {
+              errors.push({ nodeId: node.id, message: `"${label}" — end node should not have outgoing connections`, severity: 'error' });
+            }
+            break;
+          }
+        }
+      });
+
+      // ════════════════════════════════════════════════════
+      // 4. DUPLICATE KEY CHECKS
+      // ════════════════════════════════════════════════════
+      const promptKeys = new Map<string, string[]>();
+      stepNodes.forEach(node => {
+        const nd = d(node);
+        const key = nd.promptKey?.trim();
+        if (key) {
+          if (!promptKeys.has(key)) promptKeys.set(key, []);
+          promptKeys.get(key)!.push(node.id);
+        }
+      });
+      promptKeys.forEach((nodeIds, key) => {
+        if (nodeIds.length > 1) {
+          nodeIds.forEach(nid => {
+            errors.push({ nodeId: nid, field: 'promptKey', message: `Duplicate prompt key "${key}" — keys should be unique`, severity: 'warning' });
           });
         }
       });
 
-      // Check condition nodes have at least 2 outgoing edges
-      state.nodes
-        .filter((n) => n.data.nodeType === 'condition')
-        .forEach((node) => {
-          const outEdges = state.edges.filter((e) => e.source === node.id);
-          if (outEdges.length < 2) {
-            errors.push({
-              nodeId: node.id,
-              message: `Condition node "${node.data.label}" needs at least 2 branches`,
-              severity: 'warning',
-            });
-          }
-        });
-
-      // End nodes should have no outgoing edges
-      state.nodes
-        .filter((n) => n.data.nodeType === 'end')
-        .forEach((node) => {
-          const outEdges = state.edges.filter((e) => e.source === node.id);
-          if (outEdges.length > 0) {
-            errors.push({
-              nodeId: node.id,
-              message: `End node "${node.data.label}" should not have outgoing connections`,
-              severity: 'error',
-            });
-          }
-        });
+      // ════════════════════════════════════════════════════
+      // 5. SORT: errors first, then warnings, then info
+      // ════════════════════════════════════════════════════
+      const severityOrder: Record<string, number> = { error: 0, warning: 1, info: 2 };
+      errors.sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9));
 
       set({ validationErrors: errors });
       return errors;

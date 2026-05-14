@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useFlowStore } from '../../store';
 
 const DebugPanel: React.FC = () => {
@@ -13,6 +13,13 @@ const DebugPanel: React.FC = () => {
   const selectNode = useFlowStore((s) => s.selectNode);
 
   const [activeTab, setActiveTab] = React.useState<'validation' | 'json' | 'stats'>('validation');
+
+  // Auto-switch to validation tab when errors are present
+  useEffect(() => {
+    if (validationErrors.length > 0 && showDebugPanel) {
+      setActiveTab('validation');
+    }
+  }, [validationErrors, showDebugPanel]);
 
   const flowJson = useMemo(() => {
     if (!showDebugPanel && !showJsonPreview) return '';
@@ -65,6 +72,19 @@ const DebugPanel: React.FC = () => {
 
   if (!showDebugPanel) return null;
 
+  // Compute counts
+  const errorCount = validationErrors.filter(e => e.severity === 'error').length;
+  const warningCount = validationErrors.filter(e => e.severity === 'warning').length;
+  const infoCount = validationErrors.filter(e => e.severity === 'info').length;
+
+  const stepNodes = nodes.filter(n => n.data.nodeType !== 'notes');
+  const configuredCount = stepNodes.filter(n => n.data.isConfigured).length;
+  const questionnaireCount = stepNodes.filter(n => n.data.nodeType === 'questionnaire').length;
+  const endingCount = stepNodes.filter(n => {
+    const d = n.data as any;
+    return d.nodeType === 'end' || (d.nodeType === 'questionnaire' && d.promptProps?.includes('ENDING'));
+  }).length;
+
   return (
     <div className="debug-panel">
       <div className="debug-panel__header">
@@ -107,21 +127,40 @@ const DebugPanel: React.FC = () => {
                 <span>No validation issues. Click "Validate" in the toolbar to check.</span>
               </div>
             ) : (
-              <div className="debug-panel__error-list">
-                {validationErrors.map((err, i) => (
-                  <div
-                    key={i}
-                    className={`debug-panel__error debug-panel__error--${err.severity}`}
-                    onClick={() => err.nodeId && selectNode(err.nodeId)}
-                    style={{ cursor: err.nodeId ? 'pointer' : 'default' }}
-                  >
-                    <span className="debug-panel__error-icon">
-                      {err.severity === 'error' ? '❌' : err.severity === 'warning' ? '⚠️' : 'ℹ️'}
-                    </span>
-                    <span className="debug-panel__error-msg">{err.message}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                {/* Summary bar */}
+                <div className="debug-panel__summary" style={{
+                  display: 'flex', gap: '12px', padding: '8px 12px', marginBottom: '8px',
+                  background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: 600
+                }}>
+                  {errorCount > 0 && <span style={{ color: 'var(--danger)' }}>❌ {errorCount} error{errorCount > 1 ? 's' : ''}</span>}
+                  {warningCount > 0 && <span style={{ color: 'var(--warning)' }}>⚠️ {warningCount} warning{warningCount > 1 ? 's' : ''}</span>}
+                  {infoCount > 0 && <span style={{ color: 'var(--accent)' }}>ℹ️ {infoCount} suggestion{infoCount > 1 ? 's' : ''}</span>}
+                </div>
+
+                <div className="debug-panel__error-list">
+                  {validationErrors.map((err, i) => (
+                    <div
+                      key={i}
+                      className={`debug-panel__error debug-panel__error--${err.severity}`}
+                      onClick={() => err.nodeId && selectNode(err.nodeId)}
+                      style={{ cursor: err.nodeId ? 'pointer' : 'default' }}
+                    >
+                      <span className="debug-panel__error-icon">
+                        {err.severity === 'error' ? '❌' : err.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span className="debug-panel__error-msg">{err.message}</span>
+                        {err.field && (
+                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            Field: {err.field}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -137,6 +176,10 @@ const DebugPanel: React.FC = () => {
               <span className="debug-panel__stat-value">{nodes.length}</span>
             </div>
             <div className="debug-panel__stat">
+              <span className="debug-panel__stat-label">Step Nodes</span>
+              <span className="debug-panel__stat-value">{stepNodes.length}</span>
+            </div>
+            <div className="debug-panel__stat">
               <span className="debug-panel__stat-label">Connections</span>
               <span className="debug-panel__stat-value">{edges.length}</span>
             </div>
@@ -147,10 +190,16 @@ const DebugPanel: React.FC = () => {
               </span>
             </div>
             <div className="debug-panel__stat">
-              <span className="debug-panel__stat-label">End Nodes</span>
-              <span className="debug-panel__stat-value">
-                {nodes.filter((n) => n.data.nodeType === 'end').length}
-              </span>
+              <span className="debug-panel__stat-label">Questionnaires</span>
+              <span className="debug-panel__stat-value">{questionnaireCount}</span>
+            </div>
+            <div className="debug-panel__stat">
+              <span className="debug-panel__stat-label">End / Ending</span>
+              <span className="debug-panel__stat-value">{endingCount}</span>
+            </div>
+            <div className="debug-panel__stat">
+              <span className="debug-panel__stat-label">Configured</span>
+              <span className="debug-panel__stat-value">{configuredCount} / {stepNodes.length}</span>
             </div>
           </div>
         )}

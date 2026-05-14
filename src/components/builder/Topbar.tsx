@@ -116,6 +116,10 @@ const Topbar: React.FC = () => {
     const errors = validateFlow();
     if (errors.length === 0) {
       alert('✅ Flow is valid! No issues found.');
+    } else {
+      // Open the debug panel so user can see and click through errors
+      const s = useFlowStore.getState();
+      if (!s.showDebugPanel) s.toggleDebugPanel();
     }
   };
 
