@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFlowStore } from '../../store';
+import { importJsonToFlow } from '../../utils/jsonImporter';
 
 
 const Topbar: React.FC = () => {
@@ -34,6 +35,11 @@ const Topbar: React.FC = () => {
   const [editName, setEditName] = useState(flowName);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const fileImportRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -51,15 +57,17 @@ const Topbar: React.FC = () => {
 
   const handleExportJson = () => {
     const doc = exportFlow();
-    // Export clean format: prompts (questionnaire only) + steps (all nodes)
-    const cleanExport = {
+    // Export full format: includes nodes+edges (for re-import) and prompts
+    const fullExport = {
       flowId: doc.flowId,
       name: doc.name,
       version: doc.version,
+      nodes: doc.nodes,
+      edges: doc.edges,
       prompts: doc.prompts,
-      steps: doc.steps,
+      variables: doc.variables,
     };
-    const blob = new Blob([JSON.stringify(cleanExport, null, 2)], {
+    const blob = new Blob([JSON.stringify(fullExport, null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -69,6 +77,38 @@ const Topbar: React.FC = () => {
     a.click();
     URL.revokeObjectURL(url);
     setShowMenu(false);
+  };
+
+  const handleImportJson = () => {
+    setImportError(null);
+    setImportSuccess(null);
+    const result = importJsonToFlow(importJson);
+    if (!result.success) {
+      setImportError(result.error || 'Failed to import JSON.');
+      return;
+    }
+    loadFlow(result.doc);
+    setImportSuccess(`✅ Flow imported successfully (${result.format} format). ${result.doc.nodes?.length || 0} nodes loaded.`);
+    setTimeout(() => {
+      setShowImportModal(false);
+      setImportJson('');
+      setImportError(null);
+      setImportSuccess(null);
+    }, 1500);
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setImportJson(text);
+      setImportError(null);
+      setImportSuccess(null);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
 
@@ -277,6 +317,9 @@ const Topbar: React.FC = () => {
                 <button className="topbar__menu-item" onClick={handleExportJson}>
                   📤 Export JSON
                 </button>
+                <button className="topbar__menu-item" onClick={() => { setShowImportModal(true); setShowMenu(false); }}>
+                  📥 Import JSON
+                </button>
                 <button className="topbar__menu-item" onClick={() => { toggleJsonPreview(); setShowMenu(false); }}>
                   {'{ }'} JSON Preview
                 </button>
@@ -316,6 +359,92 @@ const Topbar: React.FC = () => {
           Publish
         </button>
       </div>
+
+      {/* ─── Import JSON Modal ─── */}
+      {showImportModal && (
+        <div className="import-modal-overlay" onClick={() => setShowImportModal(false)}>
+          <div className="import-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="import-modal__header">
+              <h3 className="import-modal__title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Import JSON
+              </h3>
+              <button className="import-modal__close" onClick={() => setShowImportModal(false)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div className="import-modal__body">
+              <p className="import-modal__desc">
+                Paste your flow JSON below. Supports both <strong>internal format</strong> (nodes + edges) and <strong>prompts format</strong>.
+              </p>
+
+              <textarea
+                className="import-modal__textarea"
+                placeholder='{\n  "prompts": [\n    { "pIndex": 0, "text": "Hello!", ... }\n  ]\n}'
+                value={importJson}
+                onChange={(e) => { setImportJson(e.target.value); setImportError(null); setImportSuccess(null); }}
+                spellCheck={false}
+              />
+
+              {importError && (
+                <div className="import-modal__error">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                  {importError}
+                </div>
+              )}
+
+              {importSuccess && (
+                <div className="import-modal__success">
+                  {importSuccess}
+                </div>
+              )}
+            </div>
+
+            <div className="import-modal__footer">
+              <input
+                type="file"
+                ref={fileImportRef}
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={handleFileImport}
+              />
+              <button
+                className="import-modal__btn import-modal__btn--secondary"
+                onClick={() => fileImportRef.current?.click()}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                  <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+                Load File
+              </button>
+              <button
+                className="import-modal__btn import-modal__btn--primary"
+                onClick={handleImportJson}
+                disabled={!importJson.trim()}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="16 16 12 12 8 16"></polyline>
+                  <line x1="12" y1="12" x2="12" y2="21"></line>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                </svg>
+                Import Flow
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
