@@ -306,11 +306,13 @@ const FlowNodeComponent: React.FC<NodeProps<FlowNodeData>> = ({ id, data, select
       )}
 
       {/* Quick actions */}
-      {selected && !isTrigger && (
+      {selected && (
         <div className="flow-node__actions">
-          <button className="flow-node__action-btn" onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} title="Duplicate">
-            <svg className="flow-node__action-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8 7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2v-2h2V7h-7v2H8V7zm-3 3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7zm2 0v7h7v-7H7z" /></svg>
-          </button>
+          {!isTrigger && (
+            <button className="flow-node__action-btn" onClick={(e) => { e.stopPropagation(); duplicateNode(id); }} title="Duplicate">
+              <svg className="flow-node__action-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8 7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2v-2h2V7h-7v2H8V7zm-3 3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7zm2 0v7h7v-7H7z" /></svg>
+            </button>
+          )}
           <button className="flow-node__action-btn flow-node__action-btn--delete" onClick={(e) => { e.stopPropagation(); deleteNode(id); }} title="Delete">
             <svg className="flow-node__action-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" /></svg>
           </button>

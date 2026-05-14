@@ -283,7 +283,6 @@ export const useFlowStore = create<FlowState>()(
 
     deleteNode: (nodeId) => {
       const state = get();
-      if (nodeId === 'trigger_1') return; // Can't delete the trigger
       state.pushHistory();
 
       set({
