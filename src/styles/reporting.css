@@ -9,10 +9,10 @@
 }
 
 /* Header */
-.rpt-header { margin-bottom: 18px; }
+.rpt-header { margin-bottom: 24px; }
 
 .rpt-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.5px;
@@ -20,9 +20,9 @@
 }
 
 .rpt-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
-  margin: 2px 0 0;
+  margin: 4px 0 0;
 }
 
 /* Breadcrumb */

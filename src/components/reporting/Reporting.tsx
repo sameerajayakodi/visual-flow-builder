@@ -446,12 +446,23 @@ const Reporting: React.FC = () => {
   // ═══════════════════════════════════════
   //  LEVEL 1: Flows Table
   // ═══════════════════════════════════════
+  const filteredFlows = flowSummaries.filter(f => 
+    f.flowName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const totalFlows = filteredFlows.length;
+  const totalPages = Math.ceil(totalFlows / rowsPerPage);
+  const startIdx = (page - 1) * rowsPerPage;
+  const paginatedFlows = filteredFlows.slice(startIdx, startIdx + rowsPerPage);
+  const rangeStart = totalFlows === 0 ? 0 : startIdx + 1;
+  const rangeEnd = Math.min(startIdx + rowsPerPage, totalFlows);
+
   return (
     <div className="rpt">
       <div className="rpt-header">
         <div>
-          <h1 className="rpt-title">Reporting</h1>
-          <p className="rpt-sub">Click a flow to view captured session details</p>
+          <h1 className="rpt-title">Reporting Overview</h1>
+          <p className="rpt-sub">Click a flow to analyze detailed session logs and user responses.</p>
         </div>
       </div>
 
@@ -466,6 +477,19 @@ const Reporting: React.FC = () => {
         </div>
       ) : (
         <div className="rpt-table-wrap">
+          <div className="rpt-toolbar">
+            <div className="rpt-toolbar-search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <input
+                type="text"
+                placeholder="Search flows..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+              />
+            </div>
+            <span className="rpt-toolbar-count">{totalFlows} flows</span>
+          </div>
+          
           <div className="rpt-table-scroll">
             <table className="rpt-table rpt-table--flows">
               <thead>
@@ -476,22 +500,31 @@ const Reporting: React.FC = () => {
                   <th>Abandoned</th>
                   <th>In Progress</th>
                   <th>Completion Rate</th>
-                  <th>Variables</th>
+                  <th>Variables Captured</th>
                   <th>Last Activity</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {flowSummaries.map((f) => (
+                {paginatedFlows.map((f) => (
                   <tr
                     key={f.flowId || f.flowName}
                     className="rpt-tr-clickable"
-                    onClick={() => setSelectedFlowId(f.flowId || f.flowName)}
+                    onClick={() => {
+                      setSelectedFlowId(f.flowId || f.flowName);
+                      setSearchQuery('');
+                      setPage(1);
+                    }}
                   >
                     <td className="rpt-td-flow-name">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M12 3v18" /><path d="M5 7l7-4 7 4" /><path d="M5 17l7 4 7-4" /></svg>
-                      {f.flowName}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v18" /><path d="M5 7l7-4 7 4" /><path d="M5 17l7 4 7-4" /></svg>
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: '13px' }}>{f.flowName}</span>
+                      </div>
                     </td>
-                    <td className="rpt-td-num rpt-td-bold">{f.totalSessions}</td>
+                    <td className="rpt-td-num rpt-td-bold" style={{ fontSize: '14px' }}>{f.totalSessions}</td>
                     <td className="rpt-td-num" style={{ color: '#10b981' }}>{f.completed}</td>
                     <td className="rpt-td-num" style={{ color: '#ef4444' }}>{f.abandoned}</td>
                     <td className="rpt-td-num" style={{ color: '#f59e0b' }}>{f.inProgress}</td>
@@ -500,7 +533,7 @@ const Reporting: React.FC = () => {
                         <div className="rpt-completion-track">
                           <div className="rpt-completion-fill" style={{ width: `${f.completionRate}%`, background: f.completionRate >= 70 ? '#10b981' : f.completionRate >= 50 ? '#f59e0b' : '#ef4444' }} />
                         </div>
-                        <span className="rpt-completion-num">{f.completionRate}%</span>
+                        <span className="rpt-completion-num" style={{ fontWeight: 600 }}>{f.completionRate}%</span>
                       </div>
                     </td>
                     <td>
@@ -514,10 +547,54 @@ const Reporting: React.FC = () => {
                       </div>
                     </td>
                     <td className="rpt-td-date">{formatShort(f.lastActivity)}</td>
+                    <td>
+                      <button className="rpt-view-btn" onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFlowId(f.flowId || f.flowName);
+                        setSearchQuery('');
+                        setPage(1);
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            
+            {totalFlows === 0 && (
+              <div className="rpt-empty">
+                <p>No flows match your search</p>
+              </div>
+            )}
+          </div>
+          
+          {/* MUI-style Pagination */}
+          <div className="rpt-pagination">
+            <div className="rpt-pagination-info">
+              <span>Rows per page:</span>
+              <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}>
+                {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <span className="rpt-pagination-range">
+              {rangeStart}–{rangeEnd} of {totalFlows}
+            </span>
+            <div className="rpt-pagination-btns">
+              <button className="rpt-page-btn" disabled={page <= 1} onClick={() => setPage(1)} title="First page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" /></svg>
+              </button>
+              <button className="rpt-page-btn" disabled={page <= 1} onClick={() => setPage(page - 1)} title="Previous page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+              </button>
+              <button className="rpt-page-btn" disabled={page >= totalPages} onClick={() => setPage(page + 1)} title="Next page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+              <button className="rpt-page-btn" disabled={page >= totalPages} onClick={() => setPage(totalPages)} title="Last page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
