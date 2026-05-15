@@ -2,7 +2,6 @@ import React, { useCallback, useEffect } from "react";
 import { useFlowStore } from "../../store";
 import { ConfigPanel } from "../panels";
 import SimulatorPanel from "../panels/SimulatorPanel";
-import { NodeSidebar } from "../sidebar";
 import DebugPanel from "./DebugPanel";
 import FlowCanvas from "./FlowCanvas";
 import Topbar from "./Topbar";
@@ -105,7 +104,6 @@ const FlowBuilder: React.FC = () => {
     <div className={`flow-builder ${darkMode ? "dark" : ""}`}>
       <Topbar />
       <div className="flow-builder__main">
-        <NodeSidebar />
         <div className="flow-builder__canvas-area">
           <FlowCanvas />
           <DebugPanel />

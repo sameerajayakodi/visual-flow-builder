@@ -5,3 +5,7 @@
 @import './styles/config.css';
 @import './styles/debug.css';
 @import './styles/simulator.css';
+@import './styles/shell.css';
+@import './styles/dashboard.css';
+@import './styles/reporting.css';
+@import './styles/configuration.css';

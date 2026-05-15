@@ -1,4 +1,4 @@
-.flow-builder { display: flex; flex-direction: column; height: 100vh; background: var(--bg-primary); }
+.flow-builder { display: flex; flex-direction: column; height: 100%; background: var(--bg-primary); }
 .flow-builder__main { display: flex; flex: 1; overflow: hidden; }
 .flow-builder__canvas-area { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; }
 

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useFlowStore } from '../../store';
+import { useSimulationStore } from '../../store/simulationStore';
 
 interface Message {
   id: string;
@@ -121,15 +122,21 @@ const SimulatorPanel: React.FC = () => {
   const exportFlow = useFlowStore((s) => s.exportFlow);
   const darkMode = useFlowStore((s) => s.darkMode);
   const flowName = useFlowStore((s) => s.flowName);
+  const flowId = useFlowStore((s) => s.flowId);
+
+  // Simulation store — for recording sessions
+  const simStore = useSimulationStore();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [prompts, setPrompts] = useState<any[]>([]);
   const [activePromptIndex, setActivePromptIndex] = useState<number | null>(null);
+  const [visitedCount, setVisitedCount] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -137,10 +144,26 @@ const SimulatorPanel: React.FC = () => {
   const audioChunksRef = useRef<BlobPart[]>([]);
 
   useEffect(() => {
+    simStore.initialize();
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // End any active session (abandoned)
+  const endCurrentSession = useCallback((status: 'completed' | 'abandoned' = 'abandoned') => {
+    if (sessionIdRef.current) {
+      simStore.endSession(sessionIdRef.current, status);
+      sessionIdRef.current = null;
+      setVisitedCount(0);
+    }
+  }, [simStore]);
+
   const startSimulation = () => {
+    // End previous session if any
+    endCurrentSession('abandoned');
+
     const flow = exportFlow();
     setPrompts(flow.prompts || []);
     setVariables({});
@@ -150,6 +173,7 @@ const SimulatorPanel: React.FC = () => {
       text: 'Simulation started. Type a trigger keyword (e.g. "hello") to begin.'
     }]);
     setActivePromptIndex(null);
+    setVisitedCount(0);
   };
 
   const showSimulator = useFlowStore((s) => s.showSimulator);
@@ -175,14 +199,25 @@ const SimulatorPanel: React.FC = () => {
       return;
     }
 
+    // Track visited nodes
+    setVisitedCount((prev) => {
+      const next = prev + 1;
+      if (sessionIdRef.current) {
+        simStore.updateSessionProgress(sessionIdRef.current, next, `prompt_${pIndex}`, prompt.label || prompt.key || `Prompt ${pIndex}`);
+      }
+      return next;
+    });
+
     // Interpolate variables
     let text = prompt.text || '';
     text = text.replace(/\{\{(.*?)\}\}/g, (_: string, key: string) => currentVars[key.trim()] || '');
 
     const props = prompt.props || [];
 
-    if (props.includes('END')) {
+    if (props.includes('END') || props.includes('ENDING')) {
       addBotMessage(text || 'Flow Ended.', true);
+      // ─── Record session completion ───
+      endCurrentSession('completed');
       setActivePromptIndex(null);
       return;
     }
@@ -229,8 +264,21 @@ const SimulatorPanel: React.FC = () => {
 
     let newVars = { ...variables };
     if (activePrompt && activePrompt.variableName) {
-      newVars[activePrompt.variableName] = option.text; // or option.key
+      newVars[activePrompt.variableName] = option.text;
       setVariables(newVars);
+    }
+
+    // ─── Record response to simulation store ───
+    if (sessionIdRef.current && activePrompt) {
+      simStore.addResponse(sessionIdRef.current, {
+        nodeId: `prompt_${activePrompt.pIndex}`,
+        nodeLabel: activePrompt.label || activePrompt.key || `Prompt ${activePrompt.pIndex}`,
+        nodeType: activePrompt.props?.includes('SINGLE_CHOICE') ? 'questionnaire' : 'questionnaire',
+        promptText: activePrompt.text || '',
+        userResponse: option.text,
+        timestamp: new Date().toISOString(),
+        variableName: activePrompt.variableName || undefined,
+      });
     }
 
     const nextIdx = option.nextPIndex !== undefined ? option.nextPIndex : activePrompt?.nextPIndex;
@@ -252,6 +300,12 @@ const SimulatorPanel: React.FC = () => {
       // Check for trigger
       const trigger = prompts.find(p => p.props?.includes('TRIGGER') && p.config?.keyword?.toLowerCase() === text.toLowerCase());
       if (trigger && trigger.nextPIndex !== null) {
+        // ─── Start a new simulation session ───
+        const totalNodes = prompts.filter((p: any) => !p.props?.includes('TRIGGER')).length;
+        const sid = simStore.startSession(flowId, flowName, 'simulator', totalNodes);
+        sessionIdRef.current = sid;
+        setVisitedCount(0);
+
         setTimeout(() => processPrompt(trigger.nextPIndex, variables), 300);
       } else {
         setTimeout(() => addBotMessage('No matching trigger found. Try "hello".'), 300);
@@ -266,6 +320,19 @@ const SimulatorPanel: React.FC = () => {
     if (activePrompt.variableName) {
       newVars[activePrompt.variableName] = text;
       setVariables(newVars);
+    }
+
+    // ─── Record response to simulation store ───
+    if (sessionIdRef.current && activePrompt) {
+      simStore.addResponse(sessionIdRef.current, {
+        nodeId: `prompt_${activePrompt.pIndex}`,
+        nodeLabel: activePrompt.label || activePrompt.key || `Prompt ${activePrompt.pIndex}`,
+        nodeType: 'questionnaire',
+        promptText: activePrompt.text || '',
+        userResponse: text,
+        timestamp: new Date().toISOString(),
+        variableName: activePrompt.variableName || undefined,
+      });
     }
 
     if (activePrompt.nextPIndex !== null && activePrompt.nextPIndex !== undefined) {
