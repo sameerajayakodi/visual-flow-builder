@@ -118,6 +118,15 @@ const SimulatorMessageOptions: React.FC<{ options: any[]; inputFormat?: string; 
   );
 };
 
+// --- Global State for Simulator Persistence ---
+let g_messages: Message[] = [];
+let g_variables: Record<string, string> = {};
+let g_prompts: any[] = [];
+let g_activePromptIndex: number | null = null;
+let g_visitedCount = 0;
+let g_sessionId: string | null = null;
+let g_isInitialized = false;
+
 const SimulatorPanel: React.FC = () => {
   const exportFlow = useFlowStore((s) => s.exportFlow);
   const darkMode = useFlowStore((s) => s.darkMode);
@@ -127,16 +136,56 @@ const SimulatorPanel: React.FC = () => {
   // Simulation store — for recording sessions
   const simStore = useSimulationStore();
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, _setMessages] = useState<Message[]>(g_messages);
+  const setMessages = useCallback((val: Message[] | ((prev: Message[]) => Message[])) => {
+    _setMessages((prev: Message[]) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      g_messages = next;
+      return next;
+    });
+  }, []);
+
   const [inputValue, setInputValue] = useState('');
-  const [variables, setVariables] = useState<Record<string, string>>({});
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [activePromptIndex, setActivePromptIndex] = useState<number | null>(null);
-  const [visitedCount, setVisitedCount] = useState(0);
+
+  const [variables, _setVariables] = useState<Record<string, string>>(g_variables);
+  const setVariables = useCallback((val: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    _setVariables((prev: Record<string, string>) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      g_variables = next;
+      return next;
+    });
+  }, []);
+
+  const [prompts, _setPrompts] = useState<any[]>(g_prompts);
+  const setPrompts = useCallback((val: any[] | ((prev: any[]) => any[])) => {
+    _setPrompts((prev: any[]) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      g_prompts = next;
+      return next;
+    });
+  }, []);
+
+  const [activePromptIndex, _setActivePromptIndex] = useState<number | null>(g_activePromptIndex);
+  const setActivePromptIndex = useCallback((val: number | null | ((prev: number | null) => number | null)) => {
+    _setActivePromptIndex((prev: number | null) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      g_activePromptIndex = next;
+      return next;
+    });
+  }, []);
+
+  const [visitedCount, _setVisitedCount] = useState(g_visitedCount);
+  const setVisitedCount = useCallback((val: number | ((prev: number) => number)) => {
+    _setVisitedCount((prev: number) => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      g_visitedCount = next;
+      return next;
+    });
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const sessionIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string | null>(g_sessionId);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -156,9 +205,10 @@ const SimulatorPanel: React.FC = () => {
     if (sessionIdRef.current) {
       simStore.endSession(sessionIdRef.current, status);
       sessionIdRef.current = null;
+      g_sessionId = null;
       setVisitedCount(0);
     }
-  }, [simStore]);
+  }, [simStore, setVisitedCount]);
 
   const startSimulation = () => {
     // End previous session if any
@@ -180,7 +230,10 @@ const SimulatorPanel: React.FC = () => {
   const toggleSimulator = useFlowStore((s) => s.toggleSimulator);
 
   useEffect(() => {
-    startSimulation();
+    if (!g_isInitialized) {
+      startSimulation();
+      g_isInitialized = true;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on initial mount
 
@@ -304,6 +357,7 @@ const SimulatorPanel: React.FC = () => {
         const totalNodes = prompts.filter((p: any) => !p.props?.includes('TRIGGER')).length;
         const sid = simStore.startSession(flowId, flowName, 'simulator', totalNodes);
         sessionIdRef.current = sid;
+        g_sessionId = sid;
         setVisitedCount(0);
 
         setTimeout(() => processPrompt(trigger.nextPIndex, variables), 300);
