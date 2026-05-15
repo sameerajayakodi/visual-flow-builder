@@ -89,6 +89,36 @@ const Reporting: React.FC = () => {
   // ─── Level 2: Sessions for selected flow ───
   const selectedFlow = flowSummaries.find((f) => (f.flowId || f.flowName) === selectedFlowId);
 
+  // Collect unique values per variable (for smart dropdowns vs text inputs)
+  const uniqueVarValues = useMemo(() => {
+    if (!selectedFlowId) return {} as Record<string, string[]>;
+    const allFlowSessions = sessions.filter((s) => (s.flowId || s.flowName) === selectedFlowId);
+    const valuesMap: Record<string, Set<string>> = {};
+
+    allFlowSessions.forEach((s) => {
+      Object.entries(s.variables).forEach(([key, val]) => {
+        if (!valuesMap[key]) valuesMap[key] = new Set();
+        if (val && val.trim()) valuesMap[key].add(val.trim());
+      });
+    });
+
+    const result: Record<string, string[]> = {};
+    Object.entries(valuesMap).forEach(([key, set]) => {
+      result[key] = Array.from(set).sort();
+    });
+    return result;
+  }, [sessions, selectedFlowId]);
+
+  // Helper: is this variable a "choice" type?
+  // We exclude common free-text fields so they don't appear as dropdown filters.
+  const isChoiceVar = (varName: string) => {
+    const textFields = ['user_name', 'company_name', 'requirement', 'email', 'phone', 'message', 'address'];
+    if (textFields.includes(varName)) return false;
+    
+    const vals = uniqueVarValues[varName];
+    return vals && vals.length > 0 && vals.length <= 15;
+  };
+
   const flowSessions = useMemo(() => {
     if (!selectedFlowId) return [];
     return sessions
@@ -102,14 +132,20 @@ const Reporting: React.FC = () => {
         }
         // Variable filters
         for (const [key, val] of Object.entries(variableFilters)) {
-          if (val && s.variables[key] && !s.variables[key].toLowerCase().includes(val.toLowerCase())) {
-            return false;
+          if (!val) continue;
+          const sessionVal = s.variables[key] || '';
+          if (isChoiceVar(key)) {
+            // Exact match for dropdown selections
+            if (sessionVal !== val) return false;
+          } else {
+            // Partial match for text inputs
+            if (!sessionVal.toLowerCase().includes(val.toLowerCase())) return false;
           }
         }
         return true;
       })
       .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
-  }, [sessions, selectedFlowId, statusFilter, searchQuery, variableFilters]);
+  }, [sessions, selectedFlowId, statusFilter, searchQuery, variableFilters, uniqueVarValues]);
 
   // ─── Level 3: Viewing session ───
   const viewingSession = viewingSessionId ? sessions.find((s) => s.id === viewingSessionId) : null;
@@ -296,16 +332,24 @@ const Reporting: React.FC = () => {
 
             <div className="rpt-toolbar-divider" />
 
-            {vars.slice(0, 4).map((v) => (
-              <input
-                key={v}
-                type="text"
-                className="rpt-toolbar-var-input"
-                placeholder={v}
-                value={variableFilters[v] || ''}
-                onChange={(e) => { setVariableFilters((prev) => ({ ...prev, [v]: e.target.value })); setPage(1); }}
-              />
-            ))}
+            {vars.map((v) => {
+              if (isChoiceVar(v)) {
+                return (
+                  <select
+                    key={v}
+                    className="rpt-toolbar-select"
+                    value={variableFilters[v] || ''}
+                    onChange={(e) => { setVariableFilters((prev) => ({ ...prev, [v]: e.target.value })); setPage(1); }}
+                  >
+                    <option value="">All {v}</option>
+                    {uniqueVarValues[v].map((val) => (
+                      <option key={val} value={val}>{val}</option>
+                    ))}
+                  </select>
+                );
+              }
+              return null;
+            })}
 
             {Object.values(variableFilters).some(Boolean) && (
               <button className="rpt-toolbar-clear" onClick={() => setVariableFilters({})}>Clear</button>
